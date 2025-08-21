@@ -1,0 +1,58 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f6f7fb; color: #111; }
+.container { max-width: 980px; margin: 0 auto; padding: 24px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+nav a { margin-right: 12px; text-decoration: none; color: #0366d6; }
+nav a.active { font-weight: 700; text-decoration: underline; }
+main { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); min-height: 60vh; }
+label { display: block; margin: 10px 0 6px; font-weight: 600; }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+button { padding: 10px 14px; border-radius: 8px; border: 1px solid #b5b5b5; background: #f0f0f0; cursor: pointer; }
+button.primary { background: #0366d6; color: white; border-color: #0366d6; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.card { border: 1px solid #eee; padding: 16px; border-radius: 12px; background: #fafafa; }
+.kpis { display: flex; gap: 16px; }
+.kpi { flex: 1; border: 1px dashed #ddd; border-radius: 10px; padding: 12px; background: #fff; text-align: center; }
+.table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.table th, .table td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; }
+.pie { width: 220px; height: 220px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.outcome-accepted { background: #e8f6ec; }
+.outcome-delayed { background: #fff7e6; }
+.outcome-rejected { background: #fdeaea; }
+small.muted { color: #666; }
+
+/* Outcome chip buttons */
+.action-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #b5c7ff;
+  background: #f4f7ff;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.02s ease;
+}
+.action-btn:hover {
+  background: #e7efff;
+}
+.action-btn.selected {
+  background: #3366ff;
+  border-color: #3366ff;
+  color: white;
+}
+
+
+/* Disabled primary button style */
+button.primary[disabled] {
+  background: #cfcfcf;
+  border-color: #cfcfcf;
+  color: #666;
+  cursor: not-allowed;
+}
+
+
+/* Senior confirm panel */
+.senior-confirm input[type="checkbox"] {
+  transform: none;
+}
+.senior-confirm em { font-style: italic; }
+.senior-confirm strong { font-weight: 600; }
