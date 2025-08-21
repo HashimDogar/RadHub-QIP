@@ -1,39 +1,38 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
-import Radiologist from './pages/Radiologist.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import Audit from './pages/Audit.jsx'
 import './styles.css'
 import CookieBanner from './components/CookieBanner.jsx'
+import DarkModeToggle from './components/DarkModeToggle.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Radiologist from './pages/Radiologist.jsx'
 
-function AppShell() {
+function Header(){
+  return (<header><div className="container"><h1>Radiology hub QIP</h1><p className="muted">OOH CT vetting • dashboards • eLearning</p></div></header>)
+}
+
+function App(){
+  const [tab, setTab] = React.useState('dashboard')
   return (
-    <BrowserRouter>
-      <div className="container">
-        <header>
-          <h1>Radiology hub QIP</h1>
-          <nav>
-            <NavLink to="/dashboard">Requester Dashboard</NavLink>
-            <NavLink to="/radiologist">Radiologist</NavLink>
-            <NavLink to="/audit">Audit</NavLink>
-          </nav>
-        </header>
-        <main>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/radiologist" element={<Radiologist />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/audit" element={<Audit />} />
-          </Routes>
-        </main>
-        <CookieBanner />
-        <footer>
-          <small>Prototype for QI — stores no patient identifiers.</small>
-        </footer>
-      </div>
-    </BrowserRouter>
+    <>
+      <Header />
+      <main>
+        <div className="container">
+          <div className="row" style={{ marginBottom: 12 }}>
+            <button className={tab==='dashboard'?'primary':''} onClick={()=>setTab('dashboard')}>User Dashboard</button>
+            <button className={tab==='radiologist'?'primary':''} onClick={()=>setTab('radiologist')}>Radiologist</button>
+          </div>
+          {tab==='dashboard'? <Dashboard/> : <Radiologist/>}
+        </div>
+      </main>
+      <CookieBanner />
+      <footer>
+        <div className="container footer-row">
+          <small>© Radiology hub QIP</small>
+          <DarkModeToggle />
+        </div>
+      </footer>
+    </>
   )
 }
 
-createRoot(document.getElementById('root')).render(<AppShell />)
+createRoot(document.getElementById('root')).render(<App />)

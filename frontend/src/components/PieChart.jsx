@@ -1,38 +1,23 @@
 import React from 'react'
 
-/**
- * Simple SVG pie chart (no external deps)
- * Props: data = [{ label, value }]
- */
-export default function PieChart({ data = [], size = 220 }) {
-  const total = data.reduce((s, d) => s + d.value, 0) || 1;
-  let cumulative = 0;
-  const radius = size / 2;
-  const cx = radius, cy = radius;
-
-  function getCoord(angle) {
-    const rad = (angle - 90) * Math.PI / 180.0;
-    return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
-  }
-
-  const colors = ['#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6'];
-
+export default function PieChart({ data = [], size = 160 }) {
+  const total = data.reduce((a,b)=>a+b.value,0) || 1
+  const cx = size/2, cy=size/2, r=size/2
+  let angle = -Math.PI/2
+  const segs = data.map((d,i)=>{
+    const slice = (d.value/total) * Math.PI*2
+    const x1 = cx + r * Math.cos(angle)
+    const y1 = cy + r * Math.sin(angle)
+    angle += slice
+    const x2 = cx + r * Math.cos(angle)
+    const y2 = cy + r * Math.sin(angle)
+    const large = slice > Math.PI ? 1 : 0
+    const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`
+    return <path key={i} d={path} stroke="var(--border)" fill={i===0?'#60a5fa':i===1?'#34d399':'#fca5a5'} />
+  })
   return (
-    <svg className="pie" width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Outcome breakdown">
-      {data.map((d, i) => {
-        const slice = (d.value / total) * 360;
-        const [x1, y1] = getCoord(cumulative);
-        const [x2, y2] = getCoord(cumulative + slice);
-        const largeArc = slice > 180 ? 1 : 0;
-        const pathData = [
-          `M ${cx} ${cy}`,
-          `L ${x1} ${y1}`,
-          `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-          'Z'
-        ].join(' ');
-        cumulative += slice;
-        return <path key={i} d={pathData} fill={colors[i % colors.length]} stroke="#fff" strokeWidth="1" />
-      })}
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {segs}
     </svg>
   )
 }
