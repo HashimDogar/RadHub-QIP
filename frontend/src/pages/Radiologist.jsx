@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from 'react'
-import { getUser, getScanTypes, vet, radUnlock, radSession, updateUser } from '../lib/api'
+import { getUser, getScanTypes, vet, radUnlock, radSession, updateUser, gmcLookup } from '../lib/api'
 import PieChart from '../components/PieChart'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
+const HOSPITALS = ['Whiston Hospital','Southport Hospital','Ormskirk Hospital']
 const SPECIALTIES = [
   'Emergency Medicine', 'General (Internal) Medicine', 'General Surgery',
   'Orthopaedic Surgery', 'Plastic Surgery', 'Neurosurgery', 'Urology',
@@ -32,6 +32,8 @@ export default function Radiologist() {
   const [showNewUserProfile, setShowNewUserProfile] = useState(false)
   const [newSpecialty, setNewSpecialty] = useState('')
   const [newGrade, setNewGrade] = useState('')
+  const [newHospital, setNewHospital] = useState('')
+  const [resolvedName, setResolvedName] = useState('')
 
   // Senior confirm (when score <300 and not override)
   const [seniorOk, setSeniorOk] = useState(false)
@@ -54,13 +56,13 @@ export default function Radiologist() {
   async function loadSnapshot(v) {
     if (!isValidGmc(v)) { setSnapshot(null); setShowNewUserProfile(false); return }
     const res = await getUser(v.trim())
-    if (!res.error) {
+    if (res && !res.error) {
       setSnapshot(res)
-      const isNew = (!res.user?.specialty && !res.user?.grade && (!res.requests || res.requests.length === 0))
-      setShowNewUserProfile(isNew)
-      if (isNew) { setNewSpecialty(''); setNewGrade(''); setScanType('') }
+      setShowNewUserProfile(false)
     } else {
-      setSnapshot(null); setShowNewUserProfile(false)
+      setSnapshot(null); setShowNewUserProfile(true)
+      try { const lk = await gmcLookup(v.trim()); setResolvedName(lk?.name || '') } catch {}
+      setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setScanType('')
     }
   }
 
@@ -77,7 +79,7 @@ export default function Radiologist() {
     !!scanType &&
     !!selectedOutcome &&
     (!needsSeniorTick || seniorOk) &&
-    (!showNewUserProfile || (newSpecialty && newGrade)) // require profile fields for brand-new users
+    (!showNewUserProfile || (newSpecialty && newGrade && newHospital)) // require fields for brand-new users
   )
 
   async function saveEpisode() {
@@ -92,12 +94,14 @@ export default function Radiologist() {
     if (showNewUserProfile) {
       payload.grade = newGrade
       payload.specialty = newSpecialty
+      payload.hospital = newHospital
+      payload.name = resolvedName
     }
     const res = await vet(payload)
     if (!res || res.error) { setMsg(res?.error || 'Save failed'); return }
     setSaved('Saved. Fields cleared.')
     // clear everything
-    setGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setRadGmc(''); setSeniorOk(false)
+    setGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setRadGmc(''); setSeniorOk(false)
     setTimeout(()=>setSaved(''), 2000)
   }
 
@@ -118,7 +122,6 @@ export default function Radiologist() {
     )
   }
 
-  // Vetting UI
   return (
     <div className="grid">
       <section className="card">
@@ -128,7 +131,7 @@ export default function Radiologist() {
             <label>Requester GMC (mandatory)</label>
             <input
               value={gmc}
-              onChange={e => { const v=e.target.value.replace(/\\D/g,'').slice(0,7); setGmc(v); loadSnapshot(v) }}
+              onChange={e => { const v=e.target.value.replace(/\D/g,'').slice(0,7); setGmc(v); loadSnapshot(v) }}
               placeholder="7-digit GMC"
               maxLength={7}
               inputMode="numeric"
@@ -141,9 +144,11 @@ export default function Radiologist() {
             <h3>Requester snapshot</h3>
             <div className="kpis">
               <div className="kpi"><div>GMC</div><strong>{snapshot.user.gmc}</strong></div>
-              <div className="kpi"><div>Score</div><strong>{snapshot.user.score}</strong></div>
+              <div className="kpi"><div>Name</div><strong>{snapshot.user.name || '-'}</strong></div>
+              <div className="kpi"><div>Hospital</div><strong>{snapshot.user.hospital || '-'}</strong></div>
               <div className="kpi"><div>Specialty</div><strong>{snapshot.user.specialty || '-'}</strong></div>
               <div className="kpi"><div>Grade</div><strong>{snapshot.user.grade || '-'}</strong></div>
+              <div className="kpi"><div>Score</div><strong>{snapshot.user.score}</strong></div>
             </div>
             <div className="row" style={{ alignItems:'center' }}>
               <PieChart data={[
@@ -158,13 +163,14 @@ export default function Radiologist() {
 
             <h4 style={{ marginTop: 12 }}>Recent requests</h4>
             <table className="table">
-              <thead><tr><th>Date/Time</th><th>Specialty@req</th><th>Grade@req</th><th>Scan</th><th>Outcome</th><th>Points</th><th>Reason</th></tr></thead>
+              <thead><tr><th>Date/Time</th><th>Specialty@req</th><th>Grade@req</th><th>Hospital@req</th><th>Scan</th><th>Outcome</th><th>Points</th><th>Reason</th></tr></thead>
               <tbody>
                 {snapshot.requests.map(r => (
                   <tr key={r.id}>
                     <td>{new Date(r.created_at + 'Z').toLocaleString()}</td>
                     <td>{r.requester_specialty_at_request || '-'}</td>
                     <td>{r.requester_grade_at_request || '-'}</td>
+                    <td>{r.requester_hospital_at_request || '-'}</td>
                     <td>{r.scan_type}</td>
                     <td>{r.outcome}</td>
                     <td>{r.points_change}</td>
@@ -181,6 +187,10 @@ export default function Radiologist() {
             <h3>New requester profile</h3>
             <div style={{ display:'flex', gap: 12, flexWrap:'wrap' }}>
               <div style={{ minWidth: 220 }}>
+                <label>Name</label>
+                <input value={resolvedName} onChange={e=>setResolvedName(e.target.value)} placeholder="Auto from GMC (editable)" />
+              </div>
+              <div style={{ minWidth: 220 }}>
                 <label>Specialty</label>
                 <select value={newSpecialty} onChange={e => setNewSpecialty(e.target.value)}>
                   <option value="">Select specialty</option>
@@ -194,8 +204,15 @@ export default function Radiologist() {
                   {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
+              <div style={{ minWidth: 220 }}>
+                <label>Hospital</label>
+                <select value={newHospital} onChange={e=>setNewHospital(e.target.value)}>
+                  <option value="">Select hospital</option>
+                  {HOSPITALS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
             </div>
-            <p><small className="muted">Specialty & grade will be saved with the first request for this requester.</small></p>
+            <p><small className="muted">Name/hospital/specialty/grade will be saved with the first request for this requester.</small></p>
           </div>
         )}
 
@@ -254,7 +271,7 @@ export default function Radiologist() {
             <label>Radiologist GMC (mandatory)</label>
             <input
               value={radGmc}
-              onChange={e => setRadGmc(e.target.value.replace(/\\D/g,'').slice(0,7))}
+              onChange={e => setRadGmc(e.target.value.replace(/\D/g,'').slice(0,7))}
               onKeyDown={e=>{ if(e.key==='Enter' && canSave) saveEpisode() }}
               placeholder="7-digit GMC"
               maxLength={7}
@@ -294,13 +311,21 @@ export default function Radiologist() {
                 {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
+            <div style={{ minWidth: 220 }}>
+              <label>Hospital</label>
+              <select id="edit_hosp" defaultValue={snapshot.user.hospital || ''}>
+                <option value="">Select hospital</option>
+                {HOSPITALS.map(h => <option key={h} value={h}>{h}</option>)}
+              </select>
+            </div>
           </div>
           <div className="actions" style={{ marginTop: 12 }}>
             <button className="button" onClick={async ()=>{
               const spec = document.getElementById('edit_spec').value || null
               const grade = document.getElementById('edit_grade').value || null
-              if (!spec && !grade) { alert('Nothing to update'); return }
-              const r = await updateUser(gmc.trim(), { specialty: spec, grade })
+              const hospital = document.getElementById('edit_hosp').value || null
+              if (!spec && !grade && !hospital) { alert('Nothing to update'); return }
+              const r = await updateUser(gmc.trim(), { specialty: spec, grade, hospital })
               if (r && r.ok) {
                 alert('Updated. Refreshing snapshot…')
                 const res = await getUser(gmc.trim())
@@ -308,7 +333,7 @@ export default function Radiologist() {
               } else alert(r && r.error ? r.error : 'Update failed')
             }}>Save changes</button>
           </div>
-          <p><small className="muted">Changing specialty/grade updates the profile for future requests only. Past requests keep their original specialty/grade snapshot in audit exports.</small></p>
+          <p><small className="muted">Changing details updates the profile for future requests only. Past requests keep their original snapshots in audit exports.</small></p>
         </section>
       )}
     </div>

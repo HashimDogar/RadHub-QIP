@@ -1,4 +1,3 @@
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export async function getScanTypes() {
@@ -62,5 +61,16 @@ export async function submitModule(gmc, module_id, answers) {
     credentials: 'include',
     body: JSON.stringify({ gmc, module_id, answers })
   });
+  return r.json();
+}
+
+// New endpoints
+export async function gmcLookup(gmc){
+  const r = await fetch(`${API_URL}/api/v1/gmc/lookup/${encodeURIComponent(gmc)}`, { credentials:'include' });
+  return r.json();
+}
+export async function getRank(metric, params={}){
+  const q=new URLSearchParams(params).toString();
+  const r=await fetch(`${API_URL}/api/v1/rank/${metric}?${q}`,{credentials:'include'});
   return r.json();
 }
