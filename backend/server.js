@@ -1,3 +1,4 @@
+
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS requests (
 
 function isValidGmc(g){ return /^\d{7}$/.test(String(g||'').trim()) }
 function normaliseName(s){ return s ? String(s).replace(/\s+/g,' ').trim() : null }
+
 async function lookupGmcName(gmc){
   try{
     const url = `https://www.gmc-uk.org/doctors/${gmc}`
@@ -72,7 +74,7 @@ async function lookupGmcName(gmc){
   return null
 }
 
-// Radiologist access code
+// Radiologist access code (30 min cookie)
 const RAD_CODE = process.env.RAD_CODE || '080299'
 app.post('/api/v1/rad/unlock', (req, res) => {
   const { code } = req.body || {}
@@ -92,7 +94,7 @@ app.get('/api/v1/gmc/lookup/:gmc', async (req, res)=>{
   res.json({ gmc, name })
 })
 
-// Get user (no auto-create)
+// Get user
 app.get('/api/v1/user/:gmc', (req, res)=>{
   const gmc = String(req.params.gmc||'').trim()
   if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
@@ -114,7 +116,7 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
   res.json({ user, stats:{ counts }, requests:reqs })
 })
 
-// Create/update user (self-signup + edits)
+// Create/update user
 app.post('/api/v1/user/:gmc/update', async (req, res)=>{
   const gmc = String(req.params.gmc||'').trim()
   if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
@@ -136,12 +138,12 @@ app.post('/api/v1/user/:gmc/update', async (req, res)=>{
 app.post('/api/v1/vet', async (req, res) => {
   try {
     const { requester_gmc, radiologist_gmc, scan_type, outcome, reason, discussed_with_senior, specialty, grade, hospital, name } = req.body || {}
-    if (!isValidGmc(requester_gmc) || !isValidGmc(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
+    const isValid = (v)=>/^\d{7}$/.test(String(v||'').trim())
+    if (!isValid(requester_gmc) || !isValid(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
 
     const pts = outcome==='accepted' ? 5 : outcome==='override' ? 5 : outcome==='delayed' ? -5 : outcome==='rejected' ? -10 : 0
 
-    // Ensure user exists
     let user = db.prepare('SELECT * FROM users WHERE gmc = ?').get(requester_gmc)
     if (!user) {
       const nm = name || await lookupGmcName(requester_gmc)
@@ -221,4 +223,4 @@ app.get('/api/v1/audit/raw-csv', (req, res)=>{
   res.send(csv)
 })
 
-app.listen(PORT, ()=>console.log(`Backend running on http://localhost:${PORT}`))
+app.listen(PORT, ()=>console.log(`Backend running on http://localhost:${PORT}; DB=${DB_FILE}`))

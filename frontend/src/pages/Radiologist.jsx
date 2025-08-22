@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUser, radUnlock, radSession, gmcLookup, vet } from '../lib/api'
+import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser } from '../lib/api'
 import PieChart from '../components/PieChart'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
@@ -15,7 +15,6 @@ export default function Radiologist(){
   const [radGmc, setRadGmc] = useState('')
   const [scanType, setScanType] = useState('')
   const [selectedOutcome, setSelectedOutcome] = useState('')
-  const [hoverOutcome, setHoverOutcome] = useState(null)
   const [reason, setReason] = useState('')
   const [seniorOk, setSeniorOk] = useState(false)
 
@@ -48,7 +47,7 @@ export default function Radiologist(){
     else { setSnapshot(null); setShowNewUserProfile(true); try{ const lk=await gmcLookup(v.trim()); setResolvedName(lk?.name||'') }catch{}; setNewSpecialty(''); setNewGrade(''); setNewHospital('') }
   }
 
-  const needsSeniorTick = (snapshot?.user?.score < 300) && (selectedOutcome !== 'override')
+  const needsSeniorTick = (snapshot?.user?.score < 300 && snapshot) && (selectedOutcome !== 'override')
   const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && (!needsSeniorTick || seniorOk) && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
 
   async function saveEpisode(){
@@ -60,6 +59,18 @@ export default function Radiologist(){
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
     setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSeniorOk(false); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName('')
+  }
+
+  async function createUserNow(){
+    if (!showNewUserProfile) return
+    if (!isValidGmc(gmc) || !newSpecialty || !newGrade || !newHospital){ setMsg('Complete GMC, specialty, grade, hospital'); return }
+    const r = await updateUser(gmc.trim(), { name: resolvedName || undefined, specialty: newSpecialty, grade: newGrade, hospital: newHospital })
+    if (r && r.ok){
+      const res = await getUser(gmc.trim())
+      if (res && !res.error){ setSnapshot(res); setShowNewUserProfile(false); setMsg('User created. You can now save requests normally.') }
+    } else {
+      setMsg(r?.error || 'Failed to create user')
+    }
   }
 
   if (!codeOk){
@@ -79,7 +90,7 @@ export default function Radiologist(){
       <section className="card">
         <h2>Out-of-hours CT vetting</h2>
         <div className="row">
-          <div><label>Requester GMC (mandatory)</label>
+          <div style={{ minWidth: 240, flex:'1 1 240px' }}><label>Requester GMC (mandatory)</label>
             <input value={gmc} onChange={e=>{ const v=e.target.value.replace(/\D/g,'').slice(0,7); setGmc(v); loadSnapshot(v) }} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
           </div>
         </div>
@@ -96,12 +107,16 @@ export default function Radiologist(){
               <div className="kpi"><div>Score</div><strong>{snapshot.user.score}</strong></div>
             </div>
             <div className="row" style={{ alignItems:'center' }}>
-              <PieChart data={[
-                { label: 'Accepted (incl. overrides)', value: (snapshot.stats.counts.accepted + snapshot.stats.counts.override) },
-                { label: 'Delayed', value: snapshot.stats.counts.delayed },
-                { label: 'Rejected', value: snapshot.stats.counts.rejected },
-              ]} />
-              <div>Overrides: <strong>{snapshot.stats.counts.override}</strong></div>
+              <div style={{ flex:'0 0 auto' }}>
+                <PieChart data={[
+                  { label: 'Accepted (incl. overrides)', value: (snapshot.stats.counts.accepted + snapshot.stats.counts.override) },
+                  { label: 'Delayed', value: snapshot.stats.counts.delayed },
+                  { label: 'Rejected', value: snapshot.stats.counts.rejected },
+                ]} />
+              </div>
+              <div style={{ minWidth: 220 }}>
+                Overrides: <strong>{snapshot.stats.counts.override}</strong>
+              </div>
             </div>
           </section>
         )}
@@ -110,18 +125,21 @@ export default function Radiologist(){
           <div className="card" style={{ marginTop: 12, border:'1px dashed var(--border)' }}>
             <h3>New requester profile</h3>
             <div className="row">
-              <div><label>Name</label><input value={resolvedName} onChange={e=>setResolvedName(e.target.value)} placeholder="Auto from GMC (editable)" /></div>
-              <div><label>Specialty</label>
+              <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Name</label><input value={resolvedName} onChange={e=>setResolvedName(e.target.value)} placeholder="Auto from GMC (editable)" /></div>
+              <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Specialty</label>
                 <select value={newSpecialty} onChange={e=>setNewSpecialty(e.target.value)}><option value="">Select specialty</option>{SPECIALTIES.map(s=><option key={s}>{s}</option>)}</select>
               </div>
-              <div><label>Grade</label>
+              <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Grade</label>
                 <select value={newGrade} onChange={e=>setNewGrade(e.target.value)}><option value="">Select grade</option>{GRADE_OPTIONS.map(s=><option key={s}>{s}</option>)}</select>
               </div>
-              <div><label>Hospital</label>
+              <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Hospital</label>
                 <select value={newHospital} onChange={e=>setNewHospital(e.target.value)}><option value="">Select hospital</option>{HOSPITALS.map(h=><option key={h}>{h}</option>)}</select>
               </div>
             </div>
-            <p><small className="muted">Will be saved with the first request.</small></p>
+            <div className="row" style={{ marginTop: 8 }}>
+              <button className="primary" onClick={createUserNow}>Create user now</button>
+              <span className="muted">or continue and they’ll be created on first save</span>
+            </div>
           </div>
         )}
 
@@ -140,7 +158,6 @@ export default function Radiologist(){
               <button key={out}
                 className={'chip ' + (selectedOutcome===out ? 'chip--active' : '')}
                 style={{ cursor:'pointer' }}
-                onMouseEnter={()=>setHoverOutcome(out)} onMouseLeave={()=>setHoverOutcome(null)}
                 onClick={()=>setSelectedOutcome(out)}
                 title={ out==='accepted' ? 'Do OOH' : out==='delayed' ? 'Do in-hours' : out==='rejected' ? 'Not indicated' : 'Urgent override (proceed without senior)' }
               >{out}</button>
@@ -163,7 +180,7 @@ export default function Radiologist(){
         </div>
 
         <div className="row" style={{ marginTop: 12 }}>
-          <div><label>Radiologist GMC (mandatory)</label>
+          <div style={{ minWidth: 240, flex:'1 1 240px' }}><label>Radiologist GMC (mandatory)</label>
             <input value={radGmc} onChange={e=>setRadGmc(e.target.value.replace(/\D/g,'').slice(0,7))} onKeyDown={e=>{ if(e.key==='Enter' && canSave) saveEpisode() }} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
           </div>
         </div>
@@ -172,6 +189,7 @@ export default function Radiologist(){
           <button className={canSave?'primary':''} disabled={!canSave} onClick={saveEpisode} title={canSave?'Save vetting':'Fill mandatory fields'}>Save</button>
           {saved && <span style={{ marginLeft: 12 }}>{saved}</span>}
         </div>
+        {msg && <p className="error">{msg}</p>}
       </section>
     </div>
   )

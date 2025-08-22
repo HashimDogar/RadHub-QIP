@@ -1,46 +1,45 @@
 :root {
   --bg: #ffffff;
   --text: #111827;
-  --muted: #6b7280;
+  --muted: #4b5563;
   --card: #ffffff;
   --border: #e5e7eb;
   --primary: #2563eb;
   --chip-bg: #ffffff;
-  --chip-border: #d0d7de;
-  --chip-hover: #f0f6ff;
-  --chip-active: #e6f0ff;
+  --chip-border: #d1d5db;
+  --chip-hover: #eff6ff;
+  --chip-active: #dbeafe;
 }
-.dark {
-  --bg: #0f172a;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --card: #111827;
-  --border: #1f2937;
-  --primary: #3b82f6;
-  --chip-bg: #0b1220;
-  --chip-border: #334155;
-  --chip-hover: #0f1a2e;
-  --chip-active: #0f1f3a;
-}
-* { box-sizing: border-box; }
-body { margin:0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
-a { color: var(--primary); }
+.dark { --bg:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --card:#111827; --border:#1f2937; --primary:#3b82f6; --chip-bg:#0b1220; --chip-border:#334155; --chip-hover:#0f1a2e; --chip-active:#0f1f3a; }
+*{ box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin:0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+a { color: var(--primary); text-decoration: none; }
 header, footer { background: var(--card); border-bottom:1px solid var(--border); border-top:1px solid var(--border); }
-.container { max-width: 1024px; margin: 0 auto; padding: 16px; }
-.grid { display:grid; gap:12px; }
-.card { background: var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; }
-input, select, textarea, button { background: var(--card); color: var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
-button.primary { background: var(--primary); color:#fff; border-color: var(--primary); }
-.row { display:flex; gap:12px; flex-wrap:wrap; }
-.kpis { display:grid; gap:8px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-.kpi { background: var(--card); border:1px solid var(--border); border-radius:10px; padding:10px; }
-.kpi div { color: var(--muted); font-size:12px; }
-.table { width:100%; border-collapse:collapse; }
-.table th, .table td { border-bottom:1px solid var(--border); padding:8px; text-align:left; }
-.table thead th { color: var(--muted); }
-.chip { background: var(--chip-bg); border:1px solid var(--chip-border); padding:6px 10px; border-radius:8px; }
+header h1 { margin: 0 0 4px; font-size: 22px; line-height: 1.2; }
+header p { margin: 0; color: var(--muted); }
+.container { max-width: 1120px; margin: 0 auto; padding: 16px; }
+.grid { display: grid; gap: 16px; }
+.card { background: var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; overflow: hidden; }
+.card h2, .card h3 { margin: 0 0 10px; line-height: 1.2; }
+label { display:block; margin-bottom: 4px; color: var(--muted); font-weight: 500; }
+input, select, textarea, button { background: var(--card); color: var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font: inherit; }
+input, select, textarea { width: 100%; min-width: 220px; }
+textarea { resize: vertical; }
+button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+button[disabled] { opacity: 0.6; cursor: not-allowed; }
+.row { display:flex; gap:12px; flex-wrap: wrap; align-items: flex-start; }
+.kpis { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.kpi { background: var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; min-height: 64px; }
+.kpi div { color: var(--muted); font-size:12px; margin-bottom: 6px; word-break: break-word; }
+.table { width:100%; border-collapse: collapse; table-layout: fixed; }
+.table th, .table td { padding:8px; border-bottom:1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table thead th { color: var(--muted); font-weight: 600; }
+.chip { background: var(--chip-bg); border:1px solid var(--chip-border); padding:8px 12px; border-radius:999px; }
 .chip:hover { background: var(--chip-hover); }
 .chip--active { background: var(--chip-active); border-color: var(--primary); }
-.error { color:#ef4444; }
+.error { color:#ef4444; margin-top: 8px; }
 .muted { color: var(--muted); }
+.cookie-banner { position: fixed; left: 16px; bottom: 16px; z-index: 1000; max-width: 560px; background: #111827; color: #fff; padding: 14px 16px; border-radius: 12px; box-shadow: 0 8px 22px rgba(0,0,0,0.35); }
+.cookie-banner__actions { display:flex; gap:10px; margin-top: 10px; }
 .footer-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }

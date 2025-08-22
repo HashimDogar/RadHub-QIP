@@ -1,4 +1,4 @@
-// Default to user's backend port (3001). Can override with VITE_API_URL.
+// Default to backend port 3001; override with VITE_API_URL if needed.
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 export async function getUser(gmc) {
@@ -31,4 +31,7 @@ export async function radSession(){
 export async function vet(payload){
   const r = await fetch(`${API_URL}/api/v1/vet`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload||{}) })
   return r.json()
+}
+export async function downloadRawCsv(){
+  return `${API_URL}/api/v1/audit/raw-csv`
 }

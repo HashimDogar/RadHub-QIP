@@ -5,11 +5,25 @@ import CookieBanner from './components/CookieBanner.jsx'
 import DarkModeToggle from './components/DarkModeToggle.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Radiologist from './pages/Radiologist.jsx'
+import Audit from './pages/Audit.jsx'
 
 function Header(){
   return (<header><div className="container"><h1>Radiology hub QIP</h1><p className="muted">OOH CT vetting • dashboards • eLearning</p></div></header>)
 }
-
+function Tabs({ tab, setTab }){
+  const items = [
+    { id:'dashboard', label:'User Dashboard' },
+    { id:'radiologist', label:'Radiologist' },
+    { id:'audit', label:'Audit' },
+  ]
+  return (
+    <div className="row" style={{ marginBottom: 12 }}>
+      {items.map(it=>(
+        <button key={it.id} className={tab===it.id?'primary':''} onClick={()=>setTab(it.id)}>{it.label}</button>
+      ))}
+    </div>
+  )
+}
 function App(){
   const [tab, setTab] = React.useState('dashboard')
   return (
@@ -17,11 +31,10 @@ function App(){
       <Header />
       <main>
         <div className="container">
-          <div className="row" style={{ marginBottom: 12 }}>
-            <button className={tab==='dashboard'?'primary':''} onClick={()=>setTab('dashboard')}>User Dashboard</button>
-            <button className={tab==='radiologist'?'primary':''} onClick={()=>setTab('radiologist')}>Radiologist</button>
-          </div>
-          {tab==='dashboard'? <Dashboard/> : <Radiologist/>}
+          <Tabs tab={tab} setTab={setTab} />
+          {tab==='dashboard' && <Dashboard/>}
+          {tab==='radiologist' && <Radiologist/>}
+          {tab==='audit' && <Audit/>}
         </div>
       </main>
       <CookieBanner />
@@ -34,5 +47,4 @@ function App(){
     </>
   )
 }
-
 createRoot(document.getElementById('root')).render(<App />)
