@@ -15,6 +15,7 @@ export default function Radiologist(){
   const [radGmc, setRadGmc] = useState('')
   const [radName, setRadName] = useState('')
   const [scanType, setScanType] = useState('')
+  const [otherScanType, setOtherScanType] = useState('')
   const [selectedOutcome, setSelectedOutcome] = useState('')
   const [reason, setReason] = useState('')
   const [reqAppropriateness, setReqAppropriateness] = useState(0)
@@ -55,17 +56,17 @@ export default function Radiologist(){
     else { setSnapshot(null); setShowNewUserProfile(true); try{ const lk=await gmcLookup(v.trim()); setResolvedName(lk?.name||'') }catch{}; setNewSpecialty(''); setNewGrade(''); setNewHospital('') }
   }
 
-  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && reqAppropriateness && reqQuality && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
+  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && (scanType !== 'Other' || otherScanType.trim()) && selectedOutcome && reqAppropriateness && reqQuality && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
 
   async function saveEpisode(){
     if (!canSave){ setMsg('Please complete mandatory fields'); return }
-    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType, outcome: selectedOutcome, reason, discussed_with_senior: 0, request_quality: reqQuality, request_appropriateness: reqAppropriateness }
+    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType==='Other'?otherScanType.trim():scanType, outcome: selectedOutcome, reason, discussed_with_senior: 0, request_quality: reqQuality, request_appropriateness: reqAppropriateness }
     if (showNewUserProfile){ payload.specialty = newSpecialty; payload.grade = newGrade; payload.hospital = newHospital; payload.name = resolvedName }
     const r = await vet(payload)
     if (!r || r.error){ setMsg(r?.error||'Save failed'); return }
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
-    setGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
+    setGmc(''); setScanType(''); setOtherScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
   }
 
   async function createUserNow(){
@@ -151,13 +152,19 @@ export default function Radiologist(){
           </div>
         )}
 
-        <div style={{ marginTop: 12 }}>
-          <label>Scan type</label>
-          <select value={scanType} onChange={e=>setScanType(e.target.value)}>
-            <option value="">Select scan type</option>
-            {['CT Head (trauma)','CT Head (non-trauma)','CT Abdomen/Pelvis','CT Pulmonary Angiogram','CT Spine','CT Angiogram (other)','CT KUB','Other'].map(s=><option key={s}>{s}</option>)}
-          </select>
-        </div>
+          <div style={{ marginTop: 12 }}>
+            <label>Scan type</label>
+            <select value={scanType} onChange={e=>{ const v=e.target.value; setScanType(v); setOtherScanType('') }}>
+              <option value="">Select scan type</option>
+              {['CT Head (trauma)','CT Head (non-trauma)','CT Abdomen/Pelvis','CT Pulmonary Angiogram','CT Spine','CT Angiogram (other)','CT KUB','Other'].map(s=><option key={s}>{s}</option>)}
+            </select>
+            {scanType==='Other' && (
+              <div style={{ marginTop: 8 }}>
+                <label>Scan type (Mandatory)</label>
+                <input value={otherScanType} onChange={e=>setOtherScanType(e.target.value)} />
+              </div>
+            )}
+          </div>
 
         <div style={{ marginTop: 12 }}>
           <label>Outcome</label>
