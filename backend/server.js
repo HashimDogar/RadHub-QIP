@@ -123,15 +123,41 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
   res.json({ user, stats:{ counts, avg_request_quality: avgs.avg_quality, avg_request_appropriateness: avgs.avg_appropriateness }, requests:reqs })
 })
 
+// List users with stats (for audit page)
+app.get('/api/v1/users', (req, res) => {
+  const rows = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users').all()
+  const users = rows.map(u => {
+    const total = db.prepare('SELECT COUNT(*) as c FROM requests WHERE user_id = ?').get(u.id).c || 0
+    const accepted = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0
+    const delayed = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
+    const rejected = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
+    return {
+      gmc: u.gmc,
+      name: u.name || null,
+      hospital: u.hospital || null,
+      specialty: u.specialty || null,
+      grade: u.grade || null,
+      score: Math.min(u.score || 0, 1000),
+      total,
+      accepted,
+      delayed,
+      rejected
+    }
+  })
+  res.json({ users })
+})
+
 // Create/update user
 app.post('/api/v1/user/:gmc/update', async (req, res)=>{
   const gmc = String(req.params.gmc||'').trim()
   if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
-  const { name, hospital, specialty, grade } = req.body || {}
+  const { name, hospital, specialty, grade, score } = req.body || {}
   const existing = db.prepare('SELECT id FROM users WHERE gmc = ?').get(gmc)
   if (existing) {
-    db.prepare('UPDATE users SET name = COALESCE(?, name), hospital = COALESCE(?, hospital), specialty = COALESCE(?, specialty), grade = COALESCE(?, grade) WHERE gmc = ?')
-      .run(name||null, hospital||null, specialty||null, grade||null, gmc)
+    const parsed = parseInt(score)
+    const s = score === undefined || isNaN(parsed) ? null : Math.min(1000, Math.max(0, parsed))
+    db.prepare('UPDATE users SET name = COALESCE(?, name), hospital = COALESCE(?, hospital), specialty = COALESCE(?, specialty), grade = COALESCE(?, grade), score = COALESCE(?, score) WHERE gmc = ?')
+      .run(name||null, hospital||null, specialty||null, grade||null, s, gmc)
     return res.json({ ok:true, created:false })
   } else {
     const nm = name || await lookupGmcName(gmc)
