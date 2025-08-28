@@ -183,25 +183,29 @@ export default function Radiologist(){
 
         <div style={{ marginTop: 12 }}>
           <label>Request appropriateness: Please rate how appropriate the indication was for this scan.</label>
-          <div className="row" style={{ flexWrap:'wrap', gap:4 }}>
-            {Array.from({length:10},(_,i)=>i+1).map(n=>(
-              <label key={n} style={{ display:'flex', alignItems:'center', gap:4 }}>
-                <input type="radio" name="reqApp" value={n} checked={reqAppropriateness===n} onChange={()=>setReqAppropriateness(n)} />
-                <span>{n}</span>
-              </label>
-            ))}
+          <div className="rating">
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={reqAppropriateness || 5}
+              onChange={e=>setReqAppropriateness(parseInt(e.target.value))}
+            />
+            <span className="rating__value">{reqAppropriateness || '-'}</span>
           </div>
         </div>
 
         <div style={{ marginTop: 12 }}>
           <label>Request quality: Please rate the quality of the clinical information provided.</label>
-          <div className="row" style={{ flexWrap:'wrap', gap:4 }}>
-            {Array.from({length:10},(_,i)=>i+1).map(n=>(
-              <label key={n} style={{ display:'flex', alignItems:'center', gap:4 }}>
-                <input type="radio" name="reqQual" value={n} checked={reqQuality===n} onChange={()=>setReqQuality(n)} />
-                <span>{n}</span>
-              </label>
-            ))}
+          <div className="rating">
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={reqQuality || 5}
+              onChange={e=>setReqQuality(parseInt(e.target.value))}
+            />
+            <span className="rating__value">{reqQuality || '-'}</span>
           </div>
         </div>
 
