@@ -12,8 +12,12 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
   return (
     <section className="card" style={style}>
       <h3>Summary</h3>
-      <div className="row" style={{ alignItems:'center', gap:20 }}>
-        <div style={{ flex:'0 0 auto' }}>
+      <div className="row" style={{ alignItems:'center', gap:20, display: "flex", flexDirection: "row"}}>
+        <div style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
+          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality Rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
+          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness Rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+        </div>
+        <div style={{ flex:'0 0 auto', margin: 20 }}>
           <PieChart data={[
             { label:'Accepted', value: accepted },
             { label:'Delayed', value: delayed },
@@ -27,16 +31,15 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
             </div>
           )}
         </div>
-        <div style={{ minWidth:220 }}>
+        <div style={{ minWidth:220, margin: 20 }}>
           <div>Total requests: <strong>{total}</strong></div>
           <div>Accepted requests: <strong>{accepted}</strong></div>
           <div>Delayed requests: <strong>{delayed}</strong></div>
           <div>Rejected requests: <strong>{rejected}</strong></div>
           {showOverrides && <div>Overrides: <strong>{stats.counts?.override || 0}</strong></div>}
           <div>Total score: <strong>{score}</strong></div>
-          <div>Request quality score: <strong>{qualityAvg}</strong></div>
-          <div>Request appropriateness score: <strong>{appropriatenessAvg}</strong></div>
         </div>
+        
       </div>
     </section>
   )
