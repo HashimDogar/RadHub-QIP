@@ -7,14 +7,22 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
   const delayed = stats.counts?.delayed || 0
   const rejected = stats.counts?.rejected || 0
   const total = accepted + delayed + rejected
+
   const qualityAvgNum = stats.avg_request_quality || 0
   const appropriatenessAvgNum = stats.avg_request_appropriateness || 0
   const qualityAvg = qualityAvgNum.toFixed(1)
   const appropriatenessAvg = appropriatenessAvgNum.toFixed(1)
-  const cappedScore = Math.min(score||0, 1000)
+
+  // cap T between 0 and 1000
+  const cappedScore = Math.max(0, Math.min(score || 0, 1000))
+
+  // base average of A and Q
   const baseAvg = (qualityAvgNum + appropriatenessAvgNum) / 2
-  const requestorScore = Math.max(0, Math.min(10, baseAvg + (10 - ((cappedScore/1000) * baseAvg))))
+
+  // R = baseAvg + (T/1000) * (10 - baseAvg), then clamp to [0,10]
+  const requestorScore = Math.max(0, Math.min(10, baseAvg + (cappedScore / 1000) * (10 - baseAvg)))
   const requestorScoreDisplay = requestorScore.toFixed(1)
+
   return (
     <section className="card" style={style}>
       <h3>Summary</h3>
@@ -46,7 +54,6 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
           {showOverrides && <div>Overrides: <strong>{stats.counts?.override || 0}</strong></div>}
           <div>Total score: <strong>{cappedScore}</strong></div>
         </div>
-        
       </div>
     </section>
   )
