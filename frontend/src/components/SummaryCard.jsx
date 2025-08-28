@@ -54,14 +54,14 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
         <h3>Summary</h3>
         <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Requestor score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>Overall score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request quality rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
           </div>
           <div className="summary-linegraph">
           <LineGraph
             series={[reqScoreSeries, qualitySeries, apprSeries]}
-            labels={["Requestor score", "Quality rating", "Appt rating"]}
+            labels={["Overall score", "Quality rating", "Appt rating"]}
           />
           </div>
           <div  className="summary-chart" style={{ flex:'0 0 auto', margin: 20 }}>
@@ -84,7 +84,7 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
             <div>Delayed requests: <strong>{delayed}</strong></div>
             <div>Rejected requests: <strong>{rejected}</strong></div>
             {showOverrides && <div>Overrides: <strong>{stats.counts?.override || 0}</strong></div>}
-            <div>Total score: <strong>{cappedScore}</strong></div>
+            <div>Request points: <strong>{cappedScore}</strong></div>
           </div>
         </div>
       </section>
