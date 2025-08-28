@@ -16,7 +16,6 @@ export default function Radiologist(){
   const [scanType, setScanType] = useState('')
   const [selectedOutcome, setSelectedOutcome] = useState('')
   const [reason, setReason] = useState('')
-  const [seniorOk, setSeniorOk] = useState(false)
   const [reqAppropriateness, setReqAppropriateness] = useState(0)
   const [reqQuality, setReqQuality] = useState(0)
 
@@ -32,7 +31,7 @@ export default function Radiologist(){
   useEffect(()=>{ radSession().then(s=>{ if(s?.active) setCodeOk(true) }) },[])
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
-  function outcomesForScore(score){ const outs=['accepted','delayed','rejected']; if (typeof score==='number' && score<300) outs.push('override'); return outs }
+  const OUTCOME_OPTIONS = ['accepted','delayed','rejected']
 
   async function unlock(){
     setUnlockBusy(true)
@@ -49,18 +48,17 @@ export default function Radiologist(){
     else { setSnapshot(null); setShowNewUserProfile(true); try{ const lk=await gmcLookup(v.trim()); setResolvedName(lk?.name||'') }catch{}; setNewSpecialty(''); setNewGrade(''); setNewHospital('') }
   }
 
-  const needsSeniorTick = (snapshot?.user?.score < 300 && snapshot) && (selectedOutcome !== 'override')
-  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && reqAppropriateness && reqQuality && (!needsSeniorTick || seniorOk) && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
+  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && reqAppropriateness && reqQuality && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
 
   async function saveEpisode(){
     if (!canSave){ setMsg('Please complete mandatory fields'); return }
-    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType, outcome: selectedOutcome, reason, discussed_with_senior: needsSeniorTick ? seniorOk : 0, request_quality: reqQuality, request_appropriateness: reqAppropriateness }
+    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType, outcome: selectedOutcome, reason, discussed_with_senior: 0, request_quality: reqQuality, request_appropriateness: reqAppropriateness }
     if (showNewUserProfile){ payload.specialty = newSpecialty; payload.grade = newGrade; payload.hospital = newHospital; payload.name = resolvedName }
     const r = await vet(payload)
     if (!r || r.error){ setMsg(r?.error||'Save failed'); return }
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
-    setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSeniorOk(false); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
+    setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
   }
 
   async function createUserNow(){
@@ -117,7 +115,6 @@ export default function Radiologist(){
           <SummaryCard
             stats={snapshot.stats}
             score={snapshot.user.score}
-            showOverrides
             showLegend={false}
             style={{ marginTop: 12 }}
           />
@@ -156,25 +153,16 @@ export default function Radiologist(){
         <div style={{ marginTop: 12 }}>
           <label>Outcome</label>
           <div className="row">
-            {outcomesForScore(snapshot?.user?.score).map(out=>(
+            {OUTCOME_OPTIONS.map(out=>(
               <button key={out}
                 className={'chip ' + (selectedOutcome===out ? 'chip--active' : '')}
                 style={{ cursor:'pointer' }}
                 onClick={()=>setSelectedOutcome(out)}
-                title={ out==='accepted' ? 'Do OOH' : out==='delayed' ? 'Do in-hours' : out==='rejected' ? 'Not indicated' : 'Urgent override (proceed without senior)' }
+                title={ out==='accepted' ? 'Do OOH' : out==='delayed' ? 'Do in-hours' : 'Not indicated' }
               >{out}</button>
             ))}
           </div>
         </div>
-
-        {(snapshot?.user?.score < 300 && selectedOutcome !== 'override') && (
-          <div style={{ marginTop: 12, padding: 10, background:'#fdf7e7', border:'1px solid #f2e1a6', borderRadius: 8 }}>
-            <label style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <input type="checkbox" checked={seniorOk} onChange={e=>setSeniorOk(e.target.checked)} />
-              <span><strong>Requester score &lt; 300 —</strong> Have they discussed with senior? If not required, select <em>override</em>.</span>
-            </label>
-          </div>
-        )}
 
         <div style={{ marginTop: 12 }}>
           <label>Reason (no patient identifiers)</label>

@@ -54,7 +54,7 @@ function computeRankings({ by, value, metric }) {
     : db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users').all();
   const rows = users.map(u => {
     const total = db.prepare('SELECT COUNT(*) as c FROM requests WHERE user_id = ?').get(u.id).c || 0;
-    const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND (outcome='accepted' OR outcome='override')").get(u.id).c || 0;
+    const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0;
     const rej = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0;
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0;
     const pct = (n) => total ? (n/total)*100 : 0;

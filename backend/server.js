@@ -110,10 +110,9 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
     SELECT
       SUM(CASE WHEN outcome='accepted' THEN 1 ELSE 0 END) AS accepted,
       SUM(CASE WHEN outcome='delayed' THEN 1 ELSE 0 END) AS delayed,
-      SUM(CASE WHEN outcome='rejected' THEN 1 ELSE 0 END) AS rejected,
-      SUM(CASE WHEN outcome='override' THEN 1 ELSE 0 END) AS override
+      SUM(CASE WHEN outcome='rejected' THEN 1 ELSE 0 END) AS rejected
     FROM requests WHERE user_id = ?
-  `).get(user.id) || { accepted:0, delayed:0, rejected:0, override:0 }
+  `).get(user.id) || { accepted:0, delayed:0, rejected:0 }
   const avgs = db.prepare(`SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?`).get(user.id) || { avg_quality: null, avg_appropriateness: null }
   const reqs = db.prepare(`
     SELECT id, created_at, scan_type, outcome, points_change, reason, discussed_with_senior,
@@ -148,8 +147,9 @@ app.post('/api/v1/vet', async (req, res) => {
     const isValid = (v)=>/^\d{7}$/.test(String(v||'').trim())
     if (!isValid(requester_gmc) || !isValid(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
+    if (!['accepted','delayed','rejected'].includes(outcome)) return res.status(400).json({ error:'Invalid outcome' })
 
-    const pts = outcome==='accepted' ? 5 : outcome==='override' ? 5 : outcome==='delayed' ? -5 : outcome==='rejected' ? -10 : 0
+    const pts = outcome==='accepted' ? 5 : outcome==='delayed' ? -5 : -10
     const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
     const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
 
@@ -186,7 +186,7 @@ function computeRankings({ by, value, metric }){
     : db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users').all()
   const rows = users.map(u=>{
     const total = db.prepare('SELECT COUNT(*) as c FROM requests WHERE user_id = ?').get(u.id).c || 0
-    const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND (outcome='accepted' OR outcome='override')").get(u.id).c || 0
+    const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0
     const rej = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
     const pct = (n)=> total ? (n/total)*100 : 0
