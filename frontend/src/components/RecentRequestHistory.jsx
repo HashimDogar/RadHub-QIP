@@ -56,7 +56,7 @@ export default function RecentRequestHistory({ requests = [] }) {
       {last.length === 0 ? (
         <div>No recent requests.</div>
       ) : (
-        <table className="table">
+        <table className="table recent-request-history">
           <thead>
             <tr>
               <th>Date &amp; Time</th>

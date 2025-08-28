@@ -175,7 +175,8 @@ app.post('/api/v1/user/:gmc/update', async (req, res)=>{
 // Vet/save
 app.post('/api/v1/vet', async (req, res) => {
   try {
-    const { requester_gmc, radiologist_gmc, scan_type, outcome, reason, discussed_with_senior, specialty, grade, hospital, name, request_quality, request_appropriateness } = req.body || {}
+    const { requester_gmc, scan_type, outcome, reason, discussed_with_senior, specialty, grade, hospital, name, request_quality, request_appropriateness } = req.body || {}
+    const radiologist_gmc = req.cookies.rad_gmc
     const isValid = (v)=>/^\d{7}$/.test(String(v||'').trim())
     if (!isValid(requester_gmc) || !isValid(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
