@@ -1,18 +1,59 @@
 import React from 'react'
 
-function formatDate(dateString) {
-  if (!dateString) return '—'
+function parseDate(dateString) {
+  if (!dateString) return null
   const iso = dateString.replace(' ', 'T') + 'Z'
   const parsed = new Date(iso)
-  if (isNaN(parsed.getTime())) return dateString
-  return parsed.toLocaleString()
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
+function formatDate(dateString) {
+  const parsed = parseDate(dateString)
+  if (!parsed) return '—'
+  const date = parsed.toLocaleDateString()
+  const time = parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return `${date} ${time}`
+}
+
+function formatOutcome(outcome) {
+  switch (outcome) {
+    case 'accepted':
+      return 'Accepted'
+    case 'rejected':
+      return 'Rejected'
+    case 'delayed':
+      return 'Delayed'
+    case 'info_needed':
+      return 'More info'
+    default:
+      return outcome ? outcome : '—'
+  }
+}
+
+function outcomeClass(outcome) {
+  switch (outcome) {
+    case 'accepted':
+    case 'rejected':
+    case 'delayed':
+    case 'info_needed':
+      return `outcome-${outcome}`
+    default:
+      return ''
+  }
 }
 
 export default function RecentRequestHistory({ requests = [] }) {
+  const sorted = [...requests].sort((a, b) => {
+    const dA = parseDate(a.created_at) || 0
+    const dB = parseDate(b.created_at) || 0
+    return dB - dA
+  })
+  const last = sorted.slice(0, 15)
+
   return (
     <section className="card" style={{ marginTop: 16 }}>
       <h3>Recent Request History</h3>
-      {requests.length === 0 ? (
+      {last.length === 0 ? (
         <div>No recent requests.</div>
       ) : (
         <table className="table">
@@ -27,12 +68,14 @@ export default function RecentRequestHistory({ requests = [] }) {
             </tr>
           </thead>
           <tbody>
-            {requests.map((r) => (
-              <tr key={r.id}>
+            {last.map((r) => (
+              <tr key={r.id} className={outcomeClass(r.outcome)}>
                 <td>{formatDate(r.created_at)}</td>
                 <td>{r.scan_type || '—'}</td>
-                <td>{r.outcome || '—'}</td>
-                <td>{r.reason?.trim() ? r.reason : '—'}</td>
+                <td>{formatOutcome(r.outcome)}</td>
+                <td title={r.reason?.trim() ? r.reason : undefined}>
+                  {r.reason?.trim() ? r.reason : '—'}
+                </td>
                 <td>{r.request_appropriateness != null ? r.request_appropriateness : '—'}</td>
                 <td>{r.request_quality != null ? r.request_quality : '—'}</td>
               </tr>

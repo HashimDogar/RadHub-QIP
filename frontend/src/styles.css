@@ -35,6 +35,10 @@ button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .table { width:100%; border-collapse: collapse; table-layout: fixed; }
 .table th, .table td { padding:8px; border-bottom:1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .table thead th { color: var(--muted); font-weight: 600; }
+.table tr.outcome-accepted { background:#dcfce7; }
+.table tr.outcome-rejected { background:#fee2e2; }
+.table tr.outcome-delayed { background:#fef3c7; }
+.table tr.outcome-info_needed { background:#dbeafe; }
 .chip { background: var(--chip-bg); border:1px solid var(--chip-border); padding:8px 12px; border-radius:999px; }
 .chip:hover { background: var(--chip-hover); }
 .chip--active { background: var(--chip-active); border-color: var(--primary); }
