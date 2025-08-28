@@ -120,7 +120,7 @@ export default function Radiologist(){
           <SummaryCard
             stats={snapshot.stats}
             score={snapshot.user.score}
-            showLegend={false}
+            showLegend
             style={{ marginTop: 12 }}
           />
         )}
