@@ -174,9 +174,9 @@ app.post('/api/v1/vet', async (req, res) => {
     const isValid = (v)=>/^\d{7}$/.test(String(v||'').trim())
     if (!isValid(requester_gmc) || !isValid(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
-    if (!['accepted','delayed','rejected'].includes(outcome)) return res.status(400).json({ error:'Invalid outcome' })
+    if (!['accepted','delayed','rejected','info_needed'].includes(outcome)) return res.status(400).json({ error:'Invalid outcome' })
 
-    const pts = outcome==='accepted' ? 5 : outcome==='delayed' ? -5 : -10
+    const pts = outcome==='accepted' ? 5 : outcome==='delayed' || outcome==='info_needed' ? -5 : -10
     const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
     const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
 

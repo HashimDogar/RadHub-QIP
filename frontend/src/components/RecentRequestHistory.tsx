@@ -21,6 +21,13 @@ type Props = {
   fetcher?: (input: RequestInfo, init?: RequestInit) => Promise<Response>; // testability
 };
 
+const OUTCOME_LABELS: Record<string, string> = {
+  accepted: 'Accepted',
+  delayed: 'Delayed',
+  rejected: 'Rejected',
+  info_needed: 'Requires further information'
+};
+
 const RecentRequestHistory: React.FC<Props> = ({
   className,
   days = 30,
@@ -134,7 +141,7 @@ const RecentRequestHistory: React.FC<Props> = ({
                 <div className="rh-cell" role="cell">{r.scanType || "—"}</div>
                 <div className="rh-cell" role="cell">
                   <span className={`rh-badge rh-badge--${(r.outcome || "unknown").toLowerCase()}`}>
-                    {r.outcome || "Unknown"}
+                    {OUTCOME_LABELS[r.outcome] || r.outcome || "Unknown"}
                   </span>
                 </div>
                 <div className="rh-cell" role="cell">

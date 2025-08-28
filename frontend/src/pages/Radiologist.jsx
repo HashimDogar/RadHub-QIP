@@ -31,7 +31,12 @@ export default function Radiologist(){
   useEffect(()=>{ radSession().then(s=>{ if(s?.active) setCodeOk(true) }) },[])
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
-  const OUTCOME_OPTIONS = ['Accept','Delayed','Reject']
+  const OUTCOME_OPTIONS = [
+    { label:'Accept', value:'accepted' },
+    { label:'Delayed', value:'delayed' },
+    { label:'Reject', value:'rejected' },
+    { label:'Requires further information', value:'info_needed' }
+  ]
 
   async function unlock(){
     setUnlockBusy(true)
@@ -153,13 +158,21 @@ export default function Radiologist(){
         <div style={{ marginTop: 12 }}>
           <label>Outcome</label>
           <div className="row">
-            {OUTCOME_OPTIONS.map(out=>(
-              <button key={out}
-                className={'chip ' + (selectedOutcome===out ? 'chip--active' : '')}
+            {OUTCOME_OPTIONS.map(o=>(
+              <button key={o.value}
+                className={'chip ' + (selectedOutcome===o.value ? 'chip--active' : '')}
                 style={{ cursor:'pointer' }}
-                onClick={()=>setSelectedOutcome(out)}
-                title={ out==='accepted' ? 'Do OOH' : out==='delayed' ? 'Do in-hours' : 'Not indicated' }
-              >{out}</button>
+                onClick={()=>setSelectedOutcome(o.value)}
+                title={
+                  o.value==='accepted'
+                    ? 'Do OOH'
+                    : o.value==='delayed'
+                    ? 'Do in-hours'
+                    : o.value==='rejected'
+                    ? 'Not indicated'
+                    : 'Needs more info'
+                }
+              >{o.label}</button>
             ))}
           </div>
         </div>

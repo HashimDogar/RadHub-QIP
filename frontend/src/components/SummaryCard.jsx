@@ -28,9 +28,9 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
       <h3>Summary</h3>
       <div className="row" style={{ alignItems:'center', gap:20, display: "flex", flexDirection: "row"}}>
         <div style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
-          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality Rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
-          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness Rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
           <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Requestor score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
+          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
+          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
         </div>
         <div style={{ flex:'0 0 auto', margin: 20 }}>
           <PieChart data={[
