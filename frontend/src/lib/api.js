@@ -11,6 +11,10 @@ export async function updateUser(gmc, payload) {
   })
   return r.json()
 }
+export async function getUsers(){
+  const r = await fetch(`${API_URL}/api/v1/users`, { credentials:'include' })
+  return r.json()
+}
 export async function gmcLookup(gmc){
   const r = await fetch(`${API_URL}/api/v1/gmc/lookup/${encodeURIComponent(gmc)}`, { credentials:'include' })
   return r.json()
