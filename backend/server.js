@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
   hospital TEXT,
   specialty TEXT,
   grade TEXT,
-  score INTEGER DEFAULT 1000
+  score INTEGER DEFAULT 500
 );
 CREATE TABLE IF NOT EXISTS requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -161,7 +161,7 @@ app.post('/api/v1/user/:gmc/update', async (req, res)=>{
     return res.json({ ok:true, created:false })
   } else {
     const nm = name || await lookupGmcName(gmc)
-    const info = db.prepare('INSERT INTO users (gmc, name, hospital, specialty, grade, score) VALUES (?, ?, ?, ?, ?, 1000)')
+    const info = db.prepare('INSERT INTO users (gmc, name, hospital, specialty, grade, score) VALUES (?, ?, ?, ?, ?, 500)')
       .run(gmc, nm||null, hospital||null, specialty||null, grade||null)
     return res.json({ ok:true, created:true, id: info.lastInsertRowid })
   }
@@ -183,7 +183,7 @@ app.post('/api/v1/vet', async (req, res) => {
     let user = db.prepare('SELECT * FROM users WHERE gmc = ?').get(requester_gmc)
     if (!user) {
       const nm = name || await lookupGmcName(requester_gmc)
-      const info = db.prepare('INSERT INTO users (gmc, name, hospital, specialty, grade, score) VALUES (?, ?, ?, ?, ?, 1000)')
+      const info = db.prepare('INSERT INTO users (gmc, name, hospital, specialty, grade, score) VALUES (?, ?, ?, ?, ?, 500)')
         .run(requester_gmc, nm||null, hospital||null, specialty||null, grade||null)
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid)
     }
