@@ -51,9 +51,15 @@ CREATE TABLE IF NOT EXISTS requests (
   points_change INTEGER,
   reason TEXT,
   radiologist_gmc TEXT,
+  request_quality INTEGER,
+  request_appropriateness INTEGER,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
 `)
+
+// migrate for new columns if existing DB
+try{ db.exec('ALTER TABLE requests ADD COLUMN request_quality INTEGER') }catch{}
+try{ db.exec('ALTER TABLE requests ADD COLUMN request_appropriateness INTEGER') }catch{}
 
 function isValidGmc(g){ return /^\d{7}$/.test(String(g||'').trim()) }
 function normaliseName(s){ return s ? String(s).replace(/\s+/g,' ').trim() : null }
@@ -108,12 +114,13 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
       SUM(CASE WHEN outcome='override' THEN 1 ELSE 0 END) AS override
     FROM requests WHERE user_id = ?
   `).get(user.id) || { accepted:0, delayed:0, rejected:0, override:0 }
+  const avgs = db.prepare(`SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?`).get(user.id) || { avg_quality: null, avg_appropriateness: null }
   const reqs = db.prepare(`
     SELECT id, created_at, scan_type, outcome, points_change, reason, discussed_with_senior,
            requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request
     FROM requests WHERE user_id = ? ORDER BY id DESC LIMIT 25
   `).all(user.id)
-  res.json({ user, stats:{ counts }, requests:reqs })
+  res.json({ user, stats:{ counts, avg_request_quality: avgs.avg_quality, avg_request_appropriateness: avgs.avg_appropriateness }, requests:reqs })
 })
 
 // Create/update user
@@ -137,12 +144,14 @@ app.post('/api/v1/user/:gmc/update', async (req, res)=>{
 // Vet/save
 app.post('/api/v1/vet', async (req, res) => {
   try {
-    const { requester_gmc, radiologist_gmc, scan_type, outcome, reason, discussed_with_senior, specialty, grade, hospital, name } = req.body || {}
+    const { requester_gmc, radiologist_gmc, scan_type, outcome, reason, discussed_with_senior, specialty, grade, hospital, name, request_quality, request_appropriateness } = req.body || {}
     const isValid = (v)=>/^\d{7}$/.test(String(v||'').trim())
     if (!isValid(requester_gmc) || !isValid(radiologist_gmc)) return res.status(400).json({ error:'Invalid GMC' })
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
 
     const pts = outcome==='accepted' ? 5 : outcome==='override' ? 5 : outcome==='delayed' ? -5 : outcome==='rejected' ? -10 : 0
+    const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
+    const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
 
     let user = db.prepare('SELECT * FROM users WHERE gmc = ?').get(requester_gmc)
     if (!user) {
@@ -160,8 +169,8 @@ app.post('/api/v1/vet', async (req, res) => {
     const snapHosp = hospital || user.hospital || null
     const snapName = name || user.name || null
 
-    db.prepare(`INSERT INTO requests (user_id, requester_score_at_request, requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request, requester_name_at_request, discussed_with_senior, scan_type, outcome, points_change, reason, radiologist_gmc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(user.id, user.score||0, snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc)
+    db.prepare(`INSERT INTO requests (user_id, requester_score_at_request, requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request, requester_name_at_request, discussed_with_senior, scan_type, outcome, points_change, reason, radiologist_gmc, request_quality, request_appropriateness) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(user.id, user.score||0, snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc, rq, ra)
 
     res.json({ ok:true, points_change: pts, new_score: newScore })
   } catch (e) {

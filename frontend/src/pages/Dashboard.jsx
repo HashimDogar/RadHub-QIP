@@ -75,7 +75,8 @@ export default function Dashboard(){
     const delayed = data.stats.counts.delayed
     const rejected = data.stats.counts.rejected
     const total = accepted + delayed + rejected
-    const quality = total ? ((accepted + delayed * 0.5) / total * 100).toFixed(1) : '0'
+    const qualityAvg = data.stats.avg_request_quality ? data.stats.avg_request_quality.toFixed(1) : '0.0'
+    const appropriatenessAvg = data.stats.avg_request_appropriateness ? data.stats.avg_request_appropriateness.toFixed(1) : '0.0'
     return (
       <section className="card">
         <h3>Summary</h3>
@@ -98,7 +99,8 @@ export default function Dashboard(){
             <div>Delayed requests: <strong>{delayed}</strong></div>
             <div>Rejected requests: <strong>{rejected}</strong></div>
             <div>Total score: <strong>{data.user.score}</strong></div>
-            <div>Request quality score: <strong>{quality}%</strong></div>
+            <div>Request quality score: <strong>{qualityAvg}</strong></div>
+            <div>Request appropriateness score: <strong>{appropriatenessAvg}</strong></div>
           </div>
         </div>
       </section>

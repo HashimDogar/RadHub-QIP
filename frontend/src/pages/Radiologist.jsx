@@ -17,6 +17,8 @@ export default function Radiologist(){
   const [selectedOutcome, setSelectedOutcome] = useState('')
   const [reason, setReason] = useState('')
   const [seniorOk, setSeniorOk] = useState(false)
+  const [reqAppropriateness, setReqAppropriateness] = useState(0)
+  const [reqQuality, setReqQuality] = useState(0)
 
   const [snapshot, setSnapshot] = useState(null)
   const [showNewUserProfile, setShowNewUserProfile] = useState(false)
@@ -48,17 +50,17 @@ export default function Radiologist(){
   }
 
   const needsSeniorTick = (snapshot?.user?.score < 300 && snapshot) && (selectedOutcome !== 'override')
-  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && (!needsSeniorTick || seniorOk) && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
+  const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && selectedOutcome && reqAppropriateness && reqQuality && (!needsSeniorTick || seniorOk) && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
 
   async function saveEpisode(){
     if (!canSave){ setMsg('Please complete mandatory fields'); return }
-    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType, outcome: selectedOutcome, reason, discussed_with_senior: needsSeniorTick ? seniorOk : 0 }
+    const payload = { requester_gmc: gmc.trim(), radiologist_gmc: radGmc.trim(), scan_type: scanType, outcome: selectedOutcome, reason, discussed_with_senior: needsSeniorTick ? seniorOk : 0, request_quality: reqQuality, request_appropriateness: reqAppropriateness }
     if (showNewUserProfile){ payload.specialty = newSpecialty; payload.grade = newGrade; payload.hospital = newHospital; payload.name = resolvedName }
     const r = await vet(payload)
     if (!r || r.error){ setMsg(r?.error||'Save failed'); return }
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
-    setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSeniorOk(false); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName('')
+    setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSeniorOk(false); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
   }
 
   async function createUserNow(){
@@ -105,21 +107,42 @@ export default function Radiologist(){
               <div className="kpi"><div>Specialty</div><strong>{snapshot.user.specialty || '-'}</strong></div>
               <div className="kpi"><div>Grade</div><strong>{snapshot.user.grade || '-'}</strong></div>
               <div className="kpi"><div>Score</div><strong>{snapshot.user.score}</strong></div>
-            </div>
-            <div className="row" style={{ alignItems:'center' }}>
-              <div style={{ flex:'0 0 auto' }}>
-                <PieChart data={[
-                  { label: 'Accepted (incl. overrides)', value: (snapshot.stats.counts.accepted + snapshot.stats.counts.override) },
-                  { label: 'Delayed', value: snapshot.stats.counts.delayed },
-                  { label: 'Rejected', value: snapshot.stats.counts.rejected },
-                ]} />
-              </div>
-              <div style={{ minWidth: 220 }}>
-                Overrides: <strong>{snapshot.stats.counts.override}</strong>
-              </div>
+              <div className="kpi"><div>Req quality</div><strong>{(snapshot.stats.avg_request_quality||0).toFixed(1)}</strong></div>
+              <div className="kpi"><div>Req appropriateness</div><strong>{(snapshot.stats.avg_request_appropriateness||0).toFixed(1)}</strong></div>
             </div>
           </section>
         )}
+
+        {snapshot && (()=>{
+          const accepted = snapshot.stats.counts.accepted + snapshot.stats.counts.override
+          const delayed = snapshot.stats.counts.delayed
+          const rejected = snapshot.stats.counts.rejected
+          const total = accepted + delayed + rejected
+          return (
+            <section className="card" style={{ marginTop: 12 }}>
+              <h3>Summary</h3>
+              <div className="row" style={{ alignItems:'center', gap:20 }}>
+                <div style={{ flex:'0 0 auto' }}>
+                  <PieChart data={[
+                    { label:'Accepted', value: accepted },
+                    { label:'Delayed', value: delayed },
+                    { label:'Rejected', value: rejected },
+                  ]} />
+                </div>
+                <div style={{ minWidth: 220 }}>
+                  <div>Total requests: <strong>{total}</strong></div>
+                  <div>Accepted requests: <strong>{accepted}</strong></div>
+                  <div>Delayed requests: <strong>{delayed}</strong></div>
+                  <div>Rejected requests: <strong>{rejected}</strong></div>
+                  <div>Overrides: <strong>{snapshot.stats.counts.override}</strong></div>
+                  <div>Total score: <strong>{snapshot.user.score}</strong></div>
+                  <div>Request quality score: <strong>{(snapshot.stats.avg_request_quality||0).toFixed(1)}</strong></div>
+                  <div>Request appropriateness score: <strong>{(snapshot.stats.avg_request_appropriateness||0).toFixed(1)}</strong></div>
+                </div>
+              </div>
+            </section>
+          )
+        })()}
 
         {showNewUserProfile && (
           <div className="card" style={{ marginTop: 12, border:'1px dashed var(--border)' }}>
@@ -177,6 +200,30 @@ export default function Radiologist(){
         <div style={{ marginTop: 12 }}>
           <label>Reason (no patient identifiers)</label>
           <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Justification. Do NOT include patient identifiers." rows={3} />
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label>Request appropriateness: Please rate how appropriate the indication was for this scan.</label>
+          <div className="row" style={{ flexWrap:'wrap', gap:4 }}>
+            {Array.from({length:10},(_,i)=>i+1).map(n=>(
+              <label key={n} style={{ display:'flex', alignItems:'center', gap:4 }}>
+                <input type="radio" name="reqApp" value={n} checked={reqAppropriateness===n} onChange={()=>setReqAppropriateness(n)} />
+                <span>{n}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label>Request quality: Please rate the quality of the clinical information provided.</label>
+          <div className="row" style={{ flexWrap:'wrap', gap:4 }}>
+            {Array.from({length:10},(_,i)=>i+1).map(n=>(
+              <label key={n} style={{ display:'flex', alignItems:'center', gap:4 }}>
+                <input type="radio" name="reqQual" value={n} checked={reqQuality===n} onChange={()=>setReqQuality(n)} />
+                <span>{n}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="row" style={{ marginTop: 12 }}>
