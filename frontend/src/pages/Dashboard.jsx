@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import PieChart from '../components/PieChart'
+import PieChart, { PIE_COLORS } from '../components/PieChart'
 import Modules from '../components/Modules'
 import { getUser, updateUser, gmcLookup, getRank } from '../lib/api'
 
@@ -70,23 +70,40 @@ export default function Dashboard(){
     </section>
   ) : null
 
-  const summaryCard = recognised ? (
-    <section className="card">
-      <h3>Summary</h3>
-      <div className="row" style={{ alignItems:'center' }}>
-        <div style={{ flex:'0 0 auto' }}>
-          <PieChart data={[
-            { label:'Accepted (incl. overrides)', value: (data.stats.counts.accepted + data.stats.counts.override) },
-            { label:'Delayed', value: data.stats.counts.delayed },
-            { label:'Rejected', value: data.stats.counts.rejected }
-          ]} />
+  const summaryCard = recognised ? (()=>{
+    const accepted = data.stats.counts.accepted + data.stats.counts.override
+    const delayed = data.stats.counts.delayed
+    const rejected = data.stats.counts.rejected
+    const total = accepted + delayed + rejected
+    const quality = total ? ((accepted + delayed * 0.5) / total * 100).toFixed(1) : '0'
+    return (
+      <section className="card">
+        <h3>Summary</h3>
+        <div className="row" style={{ alignItems:'center', gap:20 }}>
+          <div style={{ flex:'0 0 auto' }}>
+            <PieChart data={[
+              { label:'Accepted', value: accepted },
+              { label:'Delayed', value: delayed },
+              { label:'Rejected', value: rejected }
+            ]} />
+            <div style={{ display:'flex', justifyContent:'center', marginTop:8, gap:8, fontSize:12 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, background:PIE_COLORS[0], display:'inline-block' }}></span>Accepted</div>
+              <div style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, background:PIE_COLORS[1], display:'inline-block' }}></span>Delayed</div>
+              <div style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, background:PIE_COLORS[2], display:'inline-block' }}></span>Rejected</div>
+            </div>
+          </div>
+          <div style={{ minWidth: 220 }}>
+            <div>Total requests: <strong>{total}</strong></div>
+            <div>Accepted requests: <strong>{accepted}</strong></div>
+            <div>Delayed requests: <strong>{delayed}</strong></div>
+            <div>Rejected requests: <strong>{rejected}</strong></div>
+            <div>Total score: <strong>{data.user.score}</strong></div>
+            <div>Request quality score: <strong>{quality}%</strong></div>
+          </div>
         </div>
-        <div style={{ minWidth: 220 }}>
-          <div>Overrides: <strong>{data.stats.counts.override}</strong></div>
-        </div>
-      </div>
-    </section>
-  ) : null
+      </section>
+    )
+  })() : null
 
   return (
     <div className="grid">
