@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser } from '../lib/api'
-import PieChart from '../components/PieChart'
+import SummaryCard from '../components/SummaryCard'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
 const SPECIALTIES = ['Emergency Medicine','General (Internal) Medicine','General Surgery','Orthopaedic Surgery','Plastic Surgery','Neurosurgery','Urology','ENT (Otolaryngology)','Maxillofacial Surgery','Paediatrics','Obstetrics & Gynaecology','Intensive Care','Anaesthetics','Cardiology','Neurology','Oncology','Geriatrics','Other']
@@ -113,36 +113,15 @@ export default function Radiologist(){
           </section>
         )}
 
-        {snapshot && (()=>{
-          const accepted = snapshot.stats.counts.accepted + snapshot.stats.counts.override
-          const delayed = snapshot.stats.counts.delayed
-          const rejected = snapshot.stats.counts.rejected
-          const total = accepted + delayed + rejected
-          return (
-            <section className="card" style={{ marginTop: 12 }}>
-              <h3>Summary</h3>
-              <div className="row" style={{ alignItems:'center', gap:20 }}>
-                <div style={{ flex:'0 0 auto' }}>
-                  <PieChart data={[
-                    { label:'Accepted', value: accepted },
-                    { label:'Delayed', value: delayed },
-                    { label:'Rejected', value: rejected },
-                  ]} />
-                </div>
-                <div style={{ minWidth: 220 }}>
-                  <div>Total requests: <strong>{total}</strong></div>
-                  <div>Accepted requests: <strong>{accepted}</strong></div>
-                  <div>Delayed requests: <strong>{delayed}</strong></div>
-                  <div>Rejected requests: <strong>{rejected}</strong></div>
-                  <div>Overrides: <strong>{snapshot.stats.counts.override}</strong></div>
-                  <div>Total score: <strong>{snapshot.user.score}</strong></div>
-                  <div>Request quality score: <strong>{(snapshot.stats.avg_request_quality||0).toFixed(1)}</strong></div>
-                  <div>Request appropriateness score: <strong>{(snapshot.stats.avg_request_appropriateness||0).toFixed(1)}</strong></div>
-                </div>
-              </div>
-            </section>
-          )
-        })()}
+        {snapshot && (
+          <SummaryCard
+            stats={snapshot.stats}
+            score={snapshot.user.score}
+            showOverrides
+            showLegend={false}
+            style={{ marginTop: 12 }}
+          />
+        )}
 
         {showNewUserProfile && (
           <div className="card" style={{ marginTop: 12, border:'1px dashed var(--border)' }}>
