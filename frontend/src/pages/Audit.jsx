@@ -55,7 +55,7 @@ export default function Audit(){
       <div style={{ marginTop:'2rem' }}>
         <h3>Registered Users</h3>
         <div style={{ overflowX:'auto' }}>
-          <table>
+          <table className="table">
             <thead>
               <tr>
                 <th>Name</th>

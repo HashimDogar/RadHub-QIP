@@ -91,7 +91,7 @@ export default function Dashboard(){
             <div className="kpi"><div>Hospital</div><strong>{data.user.hospital || '-'}</strong></div>
             <div className="kpi"><div>Specialty</div><strong>{data.user.specialty || '-'}</strong></div>
             <div className="kpi"><div>Grade</div><strong>{data.user.grade || '-'}</strong></div>
-            <div className="kpi"><div>Score</div><strong>{data.user.score}</strong></div>
+
           </div>
           <div className="actions" style={{ marginTop:8 }}>
             <button onClick={startEdit}>Edit details</button>
