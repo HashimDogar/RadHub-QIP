@@ -15,6 +15,13 @@ export default function Dashboard(){
   const [signupGrade, setSignupGrade] = useState('')
   const [signupHosp, setSignupHosp] = useState('')
 
+  // Edit profile state
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editSpec, setEditSpec] = useState('')
+  const [editGrade, setEditGrade] = useState('')
+  const [editHosp, setEditHosp] = useState('')
+
   const [rankMetric, setRankMetric] = useState('score')
   const [rankBy, setRankBy] = useState('hospital')
   const [rankValue, setRankValue] = useState('')
@@ -49,24 +56,76 @@ export default function Dashboard(){
 
   async function createProfile(){
     if (!signupName || !signupSpec || !signupGrade || !signupHosp){ alert('Complete all fields'); return }
-    setBusy(True)
+    setBusy(true)
     try{
       const r = await updateUser(gmc.trim(), { name: signupName, specialty: signupSpec, grade: signupGrade, hospital: signupHosp })
       if (r && r.ok){ await fetchUser() } else alert(r?.error||'Could not create profile')
     } finally { setBusy(false) }
   }
 
+  function startEdit(){
+    setEditName(data?.user?.name || '')
+    setEditSpec(data?.user?.specialty || '')
+    setEditGrade(data?.user?.grade || '')
+    setEditHosp(data?.user?.hospital || '')
+    setEditing(true)
+  }
+
+  async function saveProfile(){
+    if (!editName || !editSpec || !editGrade || !editHosp){ alert('Complete all fields'); return }
+    setBusy(true)
+    try{
+      const r = await updateUser(gmc.trim(), { name: editName, specialty: editSpec, grade: editGrade, hospital: editHosp })
+      if (r && r.ok){ await fetchUser(); setEditing(false) } else alert(r?.error||'Could not update profile')
+    } finally { setBusy(false) }
+  }
+
   const profileCard = recognised ? (
     <section className="card">
       <h3>Profile</h3>
-      <div className="kpis">
-        <div className="kpi"><div>GMC</div><strong>{data.user.gmc}</strong></div>
-        <div className="kpi"><div>Name</div><strong>{data.user.name || '-'}</strong></div>
-        <div className="kpi"><div>Hospital</div><strong>{data.user.hospital || '-'}</strong></div>
-        <div className="kpi"><div>Specialty</div><strong>{data.user.specialty || '-'}</strong></div>
-        <div className="kpi"><div>Grade</div><strong>{data.user.grade || '-'}</strong></div>
-        <div className="kpi"><div>Score</div><strong>{data.user.score}</strong></div>
-      </div>
+      {!editing ? (
+        <>
+          <div className="kpis">
+            <div className="kpi"><div>GMC</div><strong>{data.user.gmc}</strong></div>
+            <div className="kpi"><div>Name</div><strong>{data.user.name || '-'}</strong></div>
+            <div className="kpi"><div>Hospital</div><strong>{data.user.hospital || '-'}</strong></div>
+            <div className="kpi"><div>Specialty</div><strong>{data.user.specialty || '-'}</strong></div>
+            <div className="kpi"><div>Grade</div><strong>{data.user.grade || '-'}</strong></div>
+            <div className="kpi"><div>Score</div><strong>{data.user.score}</strong></div>
+          </div>
+          <div className="actions" style={{ marginTop:8 }}>
+            <button onClick={startEdit}>Edit details</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="row">
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Name</label><input value={editName} onChange={e=>setEditName(e.target.value)} /></div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Specialty</label>
+              <select value={editSpec} onChange={e=>setEditSpec(e.target.value)}>
+                <option value="">Select specialty</option>
+                {['Emergency Medicine','General (Internal) Medicine','General Surgery','Orthopaedic Surgery','Plastic Surgery','Neurosurgery','Urology','ENT (Otolaryngology)','Maxillofacial Surgery','Paediatrics','Obstetrics & Gynaecology','Intensive Care','Anaesthetics','Cardiology','Neurology','Oncology','Geriatrics','Other'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Grade</label>
+              <select value={editGrade} onChange={e=>setEditGrade(e.target.value)}>
+                <option value="">Select grade</option>
+                {['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Hospital</label>
+              <select value={editHosp} onChange={e=>setEditHosp(e.target.value)}>
+                <option value="">Select hospital</option>
+                {['Whiston Hospital','Southport Hospital','Ormskirk Hospital'].map(h=><option key={h}>{h}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="actions" style={{ marginTop:8 }}>
+            <button onClick={()=>setEditing(false)} disabled={busy}>Cancel</button>
+            <button className="primary" onClick={saveProfile} disabled={busy}>{busy?'Saving…':'Save'}</button>
+          </div>
+        </>
+      )}
     </section>
   ) : null
 
