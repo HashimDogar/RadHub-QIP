@@ -97,7 +97,6 @@ export default function Radiologist(){
 
   return (
     <div className="grid">
-      <h2 style={{ gridColumn:'1 / -1' }}>Welcome back {radName || 'radiologist'}</h2>
       <section className="card">
         <h2>Out-of-hours CT vetting</h2>
         <div className="row">
