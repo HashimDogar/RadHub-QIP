@@ -80,17 +80,21 @@ async function lookupGmcName(gmc){
   return null
 }
 
-// Radiologist access code (30 min cookie)
+// Radiologist access code + GMC (30 min cookies)
 const RAD_CODE = process.env.RAD_CODE || '080299'
 app.post('/api/v1/rad/unlock', (req, res) => {
-  const { code } = req.body || {}
-  if (String(code) === RAD_CODE) {
-    res.cookie('rad_session','1',{ httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
-    return res.json({ ok:true })
-  }
-  res.status(401).json({ error:'Invalid code' })
+  const { code, gmc } = req.body || {}
+  if (String(code) !== RAD_CODE) return res.status(401).json({ error:'Invalid code' })
+  if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
+  res.cookie('rad_session','1',{ httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
+  res.cookie('rad_gmc', String(gmc).trim(), { httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
+  res.json({ ok:true })
 })
-app.get('/api/v1/rad/session', (req, res) => { res.json({ active: req.cookies.rad_session === '1' }) })
+app.get('/api/v1/rad/session', (req, res) => {
+  const g = req.cookies.rad_gmc
+  const active = req.cookies.rad_session === '1' && isValidGmc(g)
+  res.json({ active, gmc: active ? g : null })
+})
 
 // GMC lookup
 app.get('/api/v1/gmc/lookup/:gmc', async (req, res)=>{

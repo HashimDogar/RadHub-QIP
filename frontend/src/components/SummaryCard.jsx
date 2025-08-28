@@ -1,6 +1,7 @@
 import React from 'react'
 import PieChart, { PIE_COLORS } from './PieChart'
 import RecentRequestHistory from './RecentRequestHistory'
+import LineGraph from './LineGraph'
 
 export default function SummaryCard({ stats, score, requests = [], showOverrides=false, showLegend=true, style }) {
   if (!stats) return null
@@ -24,6 +25,29 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
   const requestorScore = Math.max(0, Math.min(10, baseAvg + (cappedScore / 1000) * (10 - baseAvg)))
   const requestorScoreDisplay = requestorScore.toFixed(1)
 
+  // build data for line graph from last 15 requests
+  const lastRequests = [...requests]
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .slice(-15)
+  const totalChange = lastRequests.reduce((sum, r) => sum + (r.points_change || 0), 0)
+  let runningScore = cappedScore - totalChange
+  const reqScoreSeries = []
+  const qualitySeries = []
+  const apprSeries = []
+  for (const r of lastRequests) {
+    runningScore += r.points_change || 0
+    const q = r.request_quality != null ? r.request_quality : 0
+    const a = r.request_appropriateness != null ? r.request_appropriateness : 0
+    const base = (q + a) / 2
+    const rs = Math.max(
+      0,
+      Math.min(10, base + (Math.max(0, Math.min(runningScore, 1000)) / 1000) * (10 - base))
+    )
+    reqScoreSeries.push(rs)
+    qualitySeries.push(q)
+    apprSeries.push(a)
+  }
+
   return (
     <>
       <section className="card" style={style}>
@@ -35,7 +59,10 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
             <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
           </div>
           <div className="summary-linegraph">
-
+          <LineGraph
+            series={[reqScoreSeries, qualitySeries, apprSeries]}
+            labels={["Requestor score", "Quality rating", "Appt rating"]}
+          />
           </div>
           <div  className="summary-chart" style={{ flex:'0 0 auto', margin: 20 }}>
           <PieChart data={[

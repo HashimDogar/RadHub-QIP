@@ -13,6 +13,7 @@ export default function Radiologist(){
 
   const [gmc, setGmc] = useState('')
   const [radGmc, setRadGmc] = useState('')
+  const [radName, setRadName] = useState('')
   const [scanType, setScanType] = useState('')
   const [selectedOutcome, setSelectedOutcome] = useState('')
   const [reason, setReason] = useState('')
@@ -28,7 +29,7 @@ export default function Radiologist(){
   const [saved, setSaved] = useState('')
   const [msg, setMsg] = useState('')
 
-  useEffect(()=>{ radSession().then(s=>{ if(s?.active) setCodeOk(true) }) },[])
+  useEffect(()=>{ radSession().then(s=>{ if(s?.active){ setCodeOk(true); if(s.gmc) setRadGmc(s.gmc); if(s.name) setRadName(s.name) } }) },[])
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
   const OUTCOME_OPTIONS = [
@@ -39,10 +40,11 @@ export default function Radiologist(){
   ]
 
   async function unlock(){
+    if (!isValidGmc(radGmc)){ setMsg('Enter valid GMC'); return }
     setUnlockBusy(true)
     try{
-      const r = await radUnlock(accessCode.trim())
-      if (r?.ok) { setCodeOk(true); setMsg('') } else setMsg(r?.error||'Invalid code')
+      const r = await radUnlock(accessCode.trim(), radGmc.trim())
+      if (r?.ok) { setCodeOk(true); setMsg(''); if(r.name) setRadName(r.name); if(r.gmc) setRadGmc(r.gmc) } else setMsg(r?.error||'Invalid code')
     } finally { setUnlockBusy(false) }
   }
 
@@ -63,7 +65,7 @@ export default function Radiologist(){
     if (!r || r.error){ setMsg(r?.error||'Save failed'); return }
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
-    setGmc(''); setRadGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
+    setGmc(''); setScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
   }
 
   async function createUserNow(){
@@ -82,6 +84,8 @@ export default function Radiologist(){
     return (
       <section className="card">
         <h2>Radiologist access</h2>
+        <label>GMC number</label>
+        <input value={radGmc} onChange={e=>setRadGmc(e.target.value.replace(/\D/g,'').slice(0,7))} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
         <label>Access code</label>
         <input value={accessCode} onChange={e=>setAccessCode(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="Enter code (080299)" />
         <div className="actions"><button className="primary" disabled={unlockBusy} onClick={unlock}>{unlockBusy?'Unlocking…':'Unlock'}</button></div>
@@ -92,6 +96,7 @@ export default function Radiologist(){
 
   return (
     <div className="grid">
+      <h2 style={{ gridColumn:'1 / -1' }}>Welcome back {radName || 'radiologist'}</h2>
       <section className="card">
         <h2>Out-of-hours CT vetting</h2>
         <div className="row">

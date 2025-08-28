@@ -24,8 +24,8 @@ export async function getRank(metric, params={}){
   const r=await fetch(`${API_URL}/api/v1/rank/${metric}?${q}`,{credentials:'include'})
   return r.json()
 }
-export async function radUnlock(code){
-  const r = await fetch(`${API_URL}/api/v1/rad/unlock`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ code }) })
+export async function radUnlock(code, gmc){
+  const r = await fetch(`${API_URL}/api/v1/rad/unlock`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ code, gmc }) })
   return r.json()
 }
 export async function radSession(){
