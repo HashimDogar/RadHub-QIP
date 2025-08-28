@@ -177,11 +177,6 @@ export default function Radiologist(){
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label>Feedback on request:</label>
-          <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Do NOT include patient identifiers" rows={3} />
-        </div>
-
-        <div style={{ marginTop: 12 }}>
           <label>Request appropriateness: Please rate how appropriate the indication was for this scan.</label>
           <div className="rating">
             <input
@@ -207,6 +202,11 @@ export default function Radiologist(){
             />
             <span className="rating__value">{reqQuality || '-'}</span>
           </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label>Feedback on request:</label>
+          <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Do NOT include patient identifiers" rows={3} />
         </div>
 
         <div className="row" style={{ marginTop: 12 }}>
