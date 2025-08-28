@@ -2,7 +2,7 @@ import React from 'react'
 import PieChart, { PIE_COLORS } from './PieChart'
 import RecentRequestHistory from './RecentRequestHistory'
 
-export default function SummaryCard({ stats, score, showOverrides=false, showLegend=true, style }) {
+export default function SummaryCard({ stats, score, requests = [], showOverrides=false, showLegend=true, style }) {
   if (!stats) return null
   const accepted = (stats.counts?.accepted || 0) + (stats.counts?.override || 0)
   const delayed = stats.counts?.delayed || 0
@@ -58,7 +58,7 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
           </div>
         </div>
       </section>
-      <RecentRequestHistory />
+      <RecentRequestHistory requests={requests} />
     </>
   )
 }

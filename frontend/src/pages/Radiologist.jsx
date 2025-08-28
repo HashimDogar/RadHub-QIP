@@ -109,9 +109,7 @@ export default function Radiologist(){
               <div className="kpi"><div>Hospital</div><strong>{snapshot.user.hospital || '-'}</strong></div>
               <div className="kpi"><div>Specialty</div><strong>{snapshot.user.specialty || '-'}</strong></div>
               <div className="kpi"><div>Grade</div><strong>{snapshot.user.grade || '-'}</strong></div>
-              <div className="kpi"><div>Score</div><strong>{snapshot.user.score}</strong></div>
-              <div className="kpi"><div>Req quality</div><strong>{(snapshot.stats.avg_request_quality||0).toFixed(1)}</strong></div>
-              <div className="kpi"><div>Req appropriateness</div><strong>{(snapshot.stats.avg_request_appropriateness||0).toFixed(1)}</strong></div>
+              
             </div>
           </section>
         )}
@@ -120,6 +118,7 @@ export default function Radiologist(){
           <SummaryCard
             stats={snapshot.stats}
             score={snapshot.user.score}
+            requests={snapshot.requests}
             showLegend
             style={{ marginTop: 12 }}
           />

@@ -130,7 +130,7 @@ export default function Dashboard(){
   ) : null
 
   const summaryCard = recognised ? (
-    <SummaryCard stats={data.stats} score={data.user.score} showLegend />
+    <SummaryCard stats={data.stats} score={data.user.score} requests={data.requests} showLegend />
   ) : null
 
   return (
