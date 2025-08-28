@@ -117,7 +117,8 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
   const avgs = db.prepare(`SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?`).get(user.id) || { avg_quality: null, avg_appropriateness: null }
   const reqs = db.prepare(`
     SELECT id, created_at, scan_type, outcome, points_change, reason, discussed_with_senior,
-           requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request
+           requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request,
+           request_quality, request_appropriateness
     FROM requests WHERE user_id = ? ORDER BY id DESC LIMIT 25
   `).all(user.id)
   res.json({ user, stats:{ counts, avg_request_quality: avgs.avg_quality, avg_request_appropriateness: avgs.avg_appropriateness }, requests:reqs })
