@@ -106,6 +106,7 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
   if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
   const user = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users WHERE gmc = ?').get(gmc)
   if (!user) return res.status(404).json({ error:'User not recognised' })
+  user.score = Math.min(user.score || 0, 1000)
   const counts = db.prepare(`
     SELECT
       SUM(CASE WHEN outcome='accepted' THEN 1 ELSE 0 END) AS accepted,
@@ -161,7 +162,7 @@ app.post('/api/v1/vet', async (req, res) => {
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid)
     }
 
-    const newScore = (user.score||0) + pts
+    const newScore = Math.min(1000, (user.score||0) + pts)
     db.prepare('UPDATE users SET score = ? WHERE id = ?').run(newScore, user.id)
 
     const snapSpec = specialty || user.specialty || null
@@ -170,7 +171,7 @@ app.post('/api/v1/vet', async (req, res) => {
     const snapName = name || user.name || null
 
     db.prepare(`INSERT INTO requests (user_id, requester_score_at_request, requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request, requester_name_at_request, discussed_with_senior, scan_type, outcome, points_change, reason, radiologist_gmc, request_quality, request_appropriateness) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(user.id, user.score||0, snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc, rq, ra)
+    .run(user.id, Math.min(user.score||0, 1000), snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc, rq, ra)
 
     res.json({ ok:true, points_change: pts, new_score: newScore })
   } catch (e) {
@@ -190,7 +191,7 @@ function computeRankings({ by, value, metric }){
     const rej = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
     const pct = (n)=> total ? (n/total)*100 : 0
-    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:u.score||0, total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del) }
+    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:Math.min(u.score||0,1000), total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del) }
   })
   const key = metric==='score' ? 'score' : metric
   rows.sort((a,b)=>(b[key]||0)-(a[key]||0))

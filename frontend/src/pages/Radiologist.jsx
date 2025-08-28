@@ -31,7 +31,7 @@ export default function Radiologist(){
   useEffect(()=>{ radSession().then(s=>{ if(s?.active) setCodeOk(true) }) },[])
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
-  const OUTCOME_OPTIONS = ['accepted','delayed','rejected']
+  const OUTCOME_OPTIONS = ['Accept','Delayed','Reject']
 
   async function unlock(){
     setUnlockBusy(true)
@@ -165,8 +165,8 @@ export default function Radiologist(){
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label>Reason (no patient identifiers)</label>
-          <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Justification. Do NOT include patient identifiers." rows={3} />
+          <label>Feedback on request:</label>
+          <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Do NOT include patient identifiers" rows={3} />
         </div>
 
         <div style={{ marginTop: 12 }}>

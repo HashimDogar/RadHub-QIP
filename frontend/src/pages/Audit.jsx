@@ -57,13 +57,27 @@ export default function Audit(){
         <div style={{ overflowX:'auto' }}>
           <table>
             <thead>
-              <tr><th>Name</th><th>GMC</th><th>Score</th><th>Total</th><th>Accepted</th><th>Delayed</th><th>Rejected</th></tr>
+              <tr>
+                <th>Name</th>
+                <th>GMC</th>
+                <th>Hospital</th>
+                <th>Specialty</th>
+                <th>Grade</th>
+                <th>Score</th>
+                <th>Total</th>
+                <th>Accepted</th>
+                <th>Delayed</th>
+                <th>Rejected</th>
+              </tr>
             </thead>
             <tbody>
               {users.map(u=>
                 <tr key={u.gmc}>
                   <td>{u.name || '-'}</td>
                   <td>{u.gmc}</td>
+                  <td>{u.hospital || '-'}</td>
+                  <td>{u.specialty || '-'}</td>
+                  <td>{u.grade || '-'}</td>
                   <td>{u.score}</td>
                   <td>{u.total}</td>
                   <td>{u.accepted}</td>

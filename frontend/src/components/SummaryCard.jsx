@@ -7,8 +7,14 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
   const delayed = stats.counts?.delayed || 0
   const rejected = stats.counts?.rejected || 0
   const total = accepted + delayed + rejected
-  const qualityAvg = stats.avg_request_quality ? stats.avg_request_quality.toFixed(1) : '0.0'
-  const appropriatenessAvg = stats.avg_request_appropriateness ? stats.avg_request_appropriateness.toFixed(1) : '0.0'
+  const qualityAvgNum = stats.avg_request_quality || 0
+  const appropriatenessAvgNum = stats.avg_request_appropriateness || 0
+  const qualityAvg = qualityAvgNum.toFixed(1)
+  const appropriatenessAvg = appropriatenessAvgNum.toFixed(1)
+  const cappedScore = Math.min(score||0, 1000)
+  const baseAvg = (qualityAvgNum + appropriatenessAvgNum) / 2
+  const requestorScore = Math.max(0, Math.min(10, baseAvg + (10 - ((cappedScore/1000) * baseAvg))))
+  const requestorScoreDisplay = requestorScore.toFixed(1)
   return (
     <section className="card" style={style}>
       <h3>Summary</h3>
@@ -16,6 +22,7 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
         <div style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
           <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality Rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
           <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness Rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+          <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Requestor score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
         </div>
         <div style={{ flex:'0 0 auto', margin: 20 }}>
           <PieChart data={[
@@ -37,7 +44,7 @@ export default function SummaryCard({ stats, score, showOverrides=false, showLeg
           <div>Delayed requests: <strong>{delayed}</strong></div>
           <div>Rejected requests: <strong>{rejected}</strong></div>
           {showOverrides && <div>Overrides: <strong>{stats.counts?.override || 0}</strong></div>}
-          <div>Total score: <strong>{score}</strong></div>
+          <div>Total score: <strong>{cappedScore}</strong></div>
         </div>
         
       </div>
