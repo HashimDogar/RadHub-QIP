@@ -29,6 +29,10 @@ textarea { resize: vertical; }
 button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
 button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .row { display:flex; gap:12px; flex-wrap: wrap; align-items: flex-start; }
+.summary-container { display:flex; align-items:center; justify-content:center; gap:20px; }
+@media (max-width: 900px) {
+  .summary-container { flex-direction:column; }
+}
 .kpis { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .kpi { background: var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; min-height: 64px; }
 .kpi div { color: var(--muted); font-size:12px; margin-bottom: 6px; word-break: break-word; }

@@ -28,11 +28,14 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
     <>
       <section className="card" style={style}>
         <h3>Summary</h3>
-        <div className="row" style={{ alignItems:'center', gap:20, display: "flex", flexDirection: "row"}}>
+        <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
             <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Requestor score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request quality rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column"}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+          </div>
+          <div className="summary-linegraph">
+
           </div>
           <div  className="summary-chart" style={{ flex:'0 0 auto', margin: 20 }}>
           <PieChart data={[
