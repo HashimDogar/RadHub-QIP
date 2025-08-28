@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 function parseDate(dateString) {
   if (!dateString) return null
@@ -43,16 +43,28 @@ function outcomeClass(outcome) {
 }
 
 export default function RecentRequestHistory({ requests = [] }) {
+  const [expanded, setExpanded] = useState(false)
   const sorted = [...requests].sort((a, b) => {
     const dA = parseDate(a.created_at) || 0
     const dB = parseDate(b.created_at) || 0
     return dB - dA
   })
-  const last = sorted.slice(0, 15)
+  const last = sorted.slice(0, expanded ? 15 : 5)
 
   return (
     <section className="card" style={{ marginTop: 16 }}>
-      <h3>Recent Request History (Last 15)</h3>
+      <h3>
+        Recent Request History (Last {expanded ? 15 : 5})
+        {sorted.length > 5 && (
+          <button
+            className="chip"
+            style={{ marginLeft: 8 }}
+            onClick={() => setExpanded((e) => !e)}
+          >
+            {expanded ? 'Collapse' : 'Expand'}
+          </button>
+        )}
+      </h3>
       {last.length === 0 ? (
         <div>No recent requests.</div>
       ) : (

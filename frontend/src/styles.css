@@ -44,6 +44,17 @@ button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .table tr.outcome-rejected { background:#fee2e2; }
 .table tr.outcome-delayed { background:#fef3c7; }
 .table tr.outcome-info_needed { background:#dbeafe; }
+.dark .recent-request-history {
+  background: var(--bg);
+}
+.dark .recent-request-history th,
+.dark .recent-request-history td {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+}
+.dark .recent-request-history tr {
+  background: var(--bg);
+}
 .chip { background: var(--chip-bg); border:1px solid var(--chip-border); padding:8px 12px; border-radius:999px; }
 .chip:hover { background: var(--chip-hover); }
 .chip--active { background: var(--chip-active); border-color: var(--primary); }
