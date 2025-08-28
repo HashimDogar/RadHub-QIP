@@ -52,7 +52,7 @@ export default function RecentRequestHistory({ requests = [] }) {
 
   return (
     <section className="card" style={{ marginTop: 16 }}>
-      <h3>Recent Request History</h3>
+      <h3>Recent Request History (Last 15)</h3>
       {last.length === 0 ? (
         <div>No recent requests.</div>
       ) : (
