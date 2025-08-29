@@ -36,7 +36,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
         <table className="table">
           <thead>
             <tr>
-              <th>#</th>
+              <th style={{ textAlign:'center' }}>#</th>
               <th>Name</th>
               <th>Hospital</th>
               <th>Specialty</th>
@@ -48,7 +48,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
               <tr key="ellipsis"><td colSpan={5} style={{ textAlign:'center' }}>...</td></tr>
             ) : (
               <tr key={r.gmc} style={highlightGmc===r.gmc?{ background:'#ffd' }:null}>
-                <td>{r.rank}</td>
+                <td style={{ textAlign:'center' }}>{r.rank}</td>
                 <td>{r.name || '-'}</td>
                 <td>{r.hospital || '-'}</td>
                 <td>{r.specialty || '-'}</td>
