@@ -92,13 +92,26 @@ app.post('/api/v1/rad/unlock', (req, res) => {
   if (String(code) !== RAD_CODE) return res.status(401).json({ error:'Invalid code' })
   if (!isValidGmc(gmc)) return res.status(400).json({ error:'Invalid GMC' })
   res.cookie('rad_session','1',{ httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
-  res.cookie('rad_gmc', String(gmc).trim(), { httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
-  res.json({ ok:true })
+  const clean = String(gmc).trim()
+  res.cookie('rad_gmc', clean, { httpOnly:true, sameSite:'lax', maxAge: 1000*60*30 })
+  const r = db.prepare('SELECT name FROM radiologists WHERE gmc = ?').get(clean)
+  res.json({ ok:true, gmc: clean, name: r?.name || null })
 })
 app.get('/api/v1/rad/session', (req, res) => {
   const g = req.cookies.rad_gmc
   const active = req.cookies.rad_session === '1' && isValidGmc(g)
-  res.json({ active, gmc: active ? g : null })
+  let name = null
+  if (active) {
+    const r = db.prepare('SELECT name FROM radiologists WHERE gmc = ?').get(g)
+    if (r && r.name) name = r.name
+  }
+  res.json({ active, gmc: active ? g : null, name })
+})
+
+app.post('/api/v1/rad/logout', (req, res) => {
+  res.clearCookie('rad_session')
+  res.clearCookie('rad_gmc')
+  res.json({ ok:true })
 })
 
 app.get('/api/v1/rad/history', (req, res) => {
@@ -107,9 +120,9 @@ app.get('/api/v1/rad/history', (req, res) => {
   if (!active) return res.status(401).json({ error: 'Not authorised' })
   const limit = Math.min(50, parseInt(req.query.limit) || 15)
   const rows = db.prepare(`
-    SELECT u.gmc AS requester_gmc, r.requester_name_at_request AS requester_name,
+    SELECT r.created_at,
+           u.gmc AS requester_gmc, r.requester_name_at_request AS requester_name,
            r.scan_type, r.outcome,
-           r.request_quality AS quality_score,
            r.request_quality AS clinical_information_score,
            r.request_appropriateness AS indication_score,
            r.reason

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser, getRadHistory } from '../lib/api'
+import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser, getRadHistory, radLogout } from '../lib/api'
 import SummaryCard from '../components/SummaryCard'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
@@ -33,7 +33,16 @@ export default function Radiologist(){
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
 
-  useEffect(()=>{ radSession().then(async s=>{ if(s?.active){ setCodeOk(true); if(s.gmc){ setRadGmc(s.gmc); try{ const lk=await gmcLookup(s.gmc); setRadName(lk?.name||'') }catch{} } } }) },[])
+  useEffect(()=>{ radSession().then(async s=>{ if(s?.active){ setCodeOk(true); if(s.gmc){ setRadGmc(s.gmc); if(s.name) setRadName(s.name); else { try{ const lk=await gmcLookup(s.gmc); setRadName(lk?.name||'') }catch{} } } } }) },[])
+
+  function formatDateTime(dateString){
+    if(!dateString) return '-'
+    const parsed = new Date(dateString.replace(' ', 'T') + 'Z')
+    if(isNaN(parsed.getTime())) return '-'
+    const date = parsed.toLocaleDateString()
+    const time = parsed.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
+    return `${date} ${time}`
+  }
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
   const OUTCOME_OPTIONS = [
@@ -104,6 +113,18 @@ export default function Radiologist(){
     setShowHistory(!showHistory)
   }
 
+  async function changeUser(){
+    await radLogout()
+    setAccessCode('')
+    setCodeOk(false)
+    setRadGmc('')
+    setRadName('')
+    setHistory([])
+    setShowHistory(false)
+    setGmc('')
+    setSnapshot(null)
+  }
+
   if (!codeOk){
     return (
       <section className="card">
@@ -122,33 +143,36 @@ export default function Radiologist(){
     <div className="grid">
       <section className="card">
         <h3>{radName || '-'}</h3>
-        <div>Role: Radiologist</div>
-        <button style={{ marginTop: 8 }} onClick={toggleHistory}>{showHistory ? 'Hide vetting history' : 'Show vetting history'}</button>
+        <div style={{color: "#4b5563"}}>Radiologist</div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <button onClick={toggleHistory}>{showHistory ? 'Hide vetting history' : 'Show Vetting history'}</button>
+          <button onClick={changeUser}>Change User</button>
+        </div>
         {showHistory && (
-          <table style={{ marginTop: 12 }}>
+          <table className="table vetting-history" style={{ marginTop: 12 }}>
             <thead>
               <tr>
-                <th>Requester GMC</th>
+                <th>Date &amp; Time</th>
+                <th style={{ textAlign:'center' }}>Requester GMC</th>
                 <th>Requester Name</th>
                 <th>Scan type</th>
                 <th>Outcome</th>
-                <th>Quality score</th>
-                <th>Clinical info score</th>
-                <th>Indication score</th>
-                <th>Feedback</th>
+                <th style={{ textAlign:'center' }}>Clinical info score</th>
+                <th style={{ textAlign:'center' }}>Indication score</th>
+                <th style={{ textAlign:'center' }}>Feedback</th>
               </tr>
             </thead>
             <tbody>
               {history.map((h,i)=>(
                 <tr key={i}>
-                  <td>{h.requester_gmc}</td>
+                  <td>{formatDateTime(h.created_at)}</td>
+                  <td style={{ textAlign:'center' }}>{h.requester_gmc}</td>
                   <td>{h.requester_name || '-'}</td>
                   <td>{h.scan_type}</td>
                   <td>{h.outcome}</td>
-                  <td>{h.quality_score ?? '-'}</td>
-                  <td>{h.clinical_information_score ?? '-'}</td>
-                  <td>{h.indication_score ?? '-'}</td>
-                  <td>{h.reason || '-'}</td>
+                  <td style={{ textAlign:'center' }}>{h.clinical_information_score ?? '-'}</td>
+                  <td style={{ textAlign:'center' }}>{h.indication_score ?? '-'}</td>
+                  <td style={{ textAlign:'center' }}>{h.reason || '-'}</td>
                 </tr>
               ))}
             </tbody>
