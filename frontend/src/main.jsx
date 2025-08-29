@@ -6,6 +6,7 @@ import DarkModeToggle from './components/DarkModeToggle.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Radiologist from './pages/Radiologist.jsx'
 import Audit from './pages/Audit.jsx'
+import Leaderboard from './pages/Leaderboard.jsx'
 
 function Header(){
   return (<header><div className="container"><h1>Radiology hub QIP</h1><p className="muted">OOH CT vetting • dashboards • eLearning</p></div></header>)
@@ -14,6 +15,7 @@ function Tabs({ tab, setTab }){
   const items = [
     { id:'dashboard', label:'User Dashboard' },
     { id:'radiologist', label:'Radiologist' },
+    { id:'leaderboard', label:'Leaderboard' },
     { id:'audit', label:'Audit' },
   ]
   return (
@@ -34,6 +36,7 @@ function App(){
           <Tabs tab={tab} setTab={setTab} />
           {tab==='dashboard' && <Dashboard/>}
           {tab==='radiologist' && <Radiologist/>}
+          {tab==='leaderboard' && <Leaderboard/>}
           {tab==='audit' && <Audit/>}
         </div>
       </main>

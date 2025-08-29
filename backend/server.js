@@ -213,36 +213,57 @@ app.post('/api/v1/vet', async (req, res) => {
 })
 
 // Ranking
-function computeRankings({ by, value, metric }){
-  const users = by && value
-    ? db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users WHERE ' + (by==='hospital' ? 'hospital = ?' : 'specialty = ?')).all(value)
-    : db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users').all()
+function computeRankings({ hospital, specialty, metric }){
+  let users
+  if (hospital && specialty) {
+    users = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users WHERE hospital = ? AND specialty = ?').all(hospital, specialty)
+  } else if (hospital) {
+    users = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users WHERE hospital = ?').all(hospital)
+  } else if (specialty) {
+    users = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users WHERE specialty = ?').all(specialty)
+  } else {
+    users = db.prepare('SELECT id, gmc, name, hospital, specialty, grade, score FROM users').all()
+  }
   const rows = users.map(u=>{
     const total = db.prepare('SELECT COUNT(*) as c FROM requests WHERE user_id = ?').get(u.id).c || 0
     const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0
     const rej = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
+    const avgs = db.prepare('SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?').get(u.id) || { avg_quality:null, avg_appropriateness:null }
     const pct = (n)=> total ? (n/total)*100 : 0
-    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:Math.min(u.score||0,1000), total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del) }
+    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:Math.min(u.score||0,1000), total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del), avg_quality:avgs.avg_quality, avg_appropriateness:avgs.avg_appropriateness }
   })
   const key = metric==='score' ? 'score' : metric
   rows.sort((a,b)=>(b[key]||0)-(a[key]||0))
+  rows.forEach((r,i)=>{ r.rank = i+1 })
   return rows
 }
 function aroundIndex(arr, idx, span=3){ const s=Math.max(0,idx-span); const e=Math.min(arr.length, idx+span+1); return arr.slice(s,e) }
 app.get('/api/v1/rank/:metric', (req, res)=>{
-  const metric = String(req.params.metric||'score')
-  if (!['score','pct_accepted','pct_rejected','pct_delayed'].includes(metric)) return res.status(400).json({ error:'Invalid metric' })
-  const by = req.query.by ? String(req.query.by) : null
-  const value = req.query.value ? String(req.query.value) : null
+  const metricParam = String(req.params.metric||'score')
+  const metricMap = { quality:'avg_quality', appropriateness:'avg_appropriateness' }
+  const metric = metricMap[metricParam] || metricParam
+  const allowed = ['score','pct_accepted','pct_rejected','pct_delayed','avg_quality','avg_appropriateness']
+  if (!allowed.includes(metric)) return res.status(400).json({ error:'Invalid metric' })
+  const hospital = req.query.hospital ? String(req.query.hospital) : null
+  const specialty = req.query.specialty ? String(req.query.specialty) : null
   const gmc = req.query.gmc ? String(req.query.gmc) : null
-  const rows = computeRankings({ by, value, metric })
+  const limit = Math.max(1, parseInt(req.query.limit) || 10)
+  const rows = computeRankings({ hospital, specialty, metric })
   const total = rows.length
   let idx = -1
   if (gmc) idx = rows.findIndex(r => r.gmc === gmc)
-  const around = idx >= 0 ? aroundIndex(rows, idx, 3) : rows.slice(0, Math.min(7, rows.length))
+  let out
+  if (gmc && idx >= limit) {
+    out = rows.slice(0, Math.min(limit, rows.length))
+    out.push({ ellipsis:true })
+    out.push(...aroundIndex(rows, idx, 2))
+  } else {
+    const l = gmc ? Math.max(limit, idx+3) : limit
+    out = rows.slice(0, Math.min(l, rows.length))
+  }
   const percentile = (idx >= 0 && total>0) ? Math.round(((total - idx) / total) * 100) : null
-  res.json({ total, rank_index: idx, percentile, metric, rows: around })
+  res.json({ total, rank_index: idx, percentile, metric, rows: out })
 })
 
 // Raw CSV
