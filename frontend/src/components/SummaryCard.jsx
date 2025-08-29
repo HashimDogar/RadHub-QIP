@@ -54,9 +54,9 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
         <h3>Summary</h3>
         <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>Overall score: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request quality rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request appropriateness rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>Overall Rating: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Clinical Information rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request Indication rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
           </div>
           <div className="summary-linegraph">
           <LineGraph
