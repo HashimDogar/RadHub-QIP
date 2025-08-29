@@ -226,10 +226,18 @@ export default function Radiologist(){
           </div>
         </div>
 
-        <div className="actions" style={{ marginTop: 12 }}>
-          <button className={canSave?'primary':''} disabled={!canSave} onClick={saveEpisode} title={canSave?'Save vetting':'Fill mandatory fields'}>Save</button>
-          {saved && <span style={{ marginLeft: 12 }}>{saved}</span>}
-        </div>
+          <div className="actions" style={{ marginTop: 12 }}>
+            <button
+              className={canSave ? 'primary' : ''}
+              disabled={!canSave}
+              onClick={saveEpisode}
+              title={canSave ? 'Save vetting' : 'Fill mandatory fields'}
+              style={{ cursor: canSave ? 'pointer' : 'not-allowed' }}
+            >
+              Save
+            </button>
+            {saved && <span style={{ marginLeft: 12 }}>{saved}</span>}
+          </div>
         {msg && <p className="error">{msg}</p>}
       </section>
     </div>
