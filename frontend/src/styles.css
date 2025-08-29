@@ -44,6 +44,10 @@ button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .table tr.outcome-rejected { background:#fee2e2; }
 .table tr.outcome-delayed { background:#fef3c7; }
 .table tr.outcome-info_needed { background:#dbeafe; }
+.table tr.rank-1 { background:#ffd700; color:#000; }
+.table tr.rank-2 { background:#c0c0c0; color:#000; }
+.dark .table tr.rank-1 { background:#b8860b; color:#000; }
+.dark .table tr.rank-2 { background:#9ca3af; color:#000; }
 .dark .recent-request-history {
   background: var(--bg);
 }

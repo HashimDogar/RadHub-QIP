@@ -47,7 +47,11 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
             {rows.map((r)=> r.ellipsis ? (
               <tr key="ellipsis"><td colSpan={5} style={{ textAlign:'center' }}>...</td></tr>
             ) : (
-              <tr key={r.gmc} style={highlightGmc===r.gmc?{ background:'#ffd' }:null}>
+              <tr
+                key={r.gmc}
+                className={`rank-${r.rank}`}
+                style={highlightGmc===r.gmc && r.rank>2 ? { background:'#ffd' } : null}
+              >
                 <td style={{ textAlign:'center' }}>{r.rank}</td>
                 <td>{r.name || '-'}</td>
                 <td>{r.hospital || '-'}</td>
