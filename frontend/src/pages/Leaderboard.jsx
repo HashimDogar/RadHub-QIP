@@ -82,7 +82,7 @@ export default function Leaderboard(){
       <LeaderboardTable metric="score" title="Overall rating" />
       <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
         <LeaderboardTable metric="quality" title="Clinical Information rating" />
-        <LeaderboardTable metric="appropriateness" title="Requisition indication rating" />
+        <LeaderboardTable metric="appropriateness" title="Request indication rating" />
       </div>
 
       <section className="card" style={{ marginTop:'2rem' }}>
@@ -103,7 +103,7 @@ export default function Leaderboard(){
           <LeaderboardTable metric="score" title={`Overall rating – ${localUser.hospital || '-'} / ${localUser.specialty || '-'}`} hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
             <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
-            <LeaderboardTable metric="appropriateness" title="Requisition indication rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
+            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
           </div>
         </>
       )}
@@ -136,7 +136,7 @@ export default function Leaderboard(){
           <LeaderboardTable metric="score" title={`Overall rating – ${findHospital} / ${findSpecialty}`} hospital={findHospital} specialty={findSpecialty} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
             <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={findHospital} specialty={findSpecialty} />
-            <LeaderboardTable metric="appropriateness" title="Requisition indication rating" hospital={findHospital} specialty={findSpecialty} />
+            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={findHospital} specialty={findSpecialty} />
           </div>
         </>
       )}
