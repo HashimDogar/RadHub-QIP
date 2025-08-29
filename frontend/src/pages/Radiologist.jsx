@@ -35,13 +35,42 @@ export default function Radiologist(){
 
   useEffect(()=>{ radSession().then(async s=>{ if(s?.active){ setCodeOk(true); if(s.gmc){ setRadGmc(s.gmc); if(s.name) setRadName(s.name); else { try{ const lk=await gmcLookup(s.gmc); setRadName(lk?.name||'') }catch{} } } } }) },[])
 
-  function formatDateTime(dateString){
-    if(!dateString) return '-'
+  function parseDate(dateString){
+    if(!dateString) return null
     const parsed = new Date(dateString.replace(' ', 'T') + 'Z')
-    if(isNaN(parsed.getTime())) return '-'
-    const date = parsed.toLocaleDateString()
-    const time = parsed.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
-    return `${date} ${time}`
+    return isNaN(parsed.getTime()) ? null : parsed
+  }
+
+  function formatDate(dateString){
+    const parsed = parseDate(dateString)
+    return parsed ? parsed.toLocaleDateString() : '-'
+  }
+
+  function formatTime(dateString){
+    const parsed = parseDate(dateString)
+    return parsed ? parsed.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '-'
+  }
+
+  function formatOutcome(outcome){
+    switch(outcome){
+      case 'accepted': return 'Accepted'
+      case 'rejected': return 'Rejected'
+      case 'delayed': return 'Delayed'
+      case 'info_needed': return 'More info'
+      default: return outcome ? outcome.charAt(0).toUpperCase()+outcome.slice(1) : '-'
+    }
+  }
+
+  function outcomeClass(outcome){
+    switch(outcome){
+      case 'accepted':
+      case 'rejected':
+      case 'delayed':
+      case 'info_needed':
+        return `outcome-${outcome}`
+      default:
+        return ''
+    }
   }
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
@@ -152,8 +181,9 @@ export default function Radiologist(){
           <table className="table vetting-history" style={{ marginTop: 12 }}>
             <thead>
               <tr>
-                <th>Date &amp; Time</th>
-                <th style={{ textAlign:'center' }}>Requester GMC</th>
+                <th style={{ textAlign:'center' }}>Date</th>
+                <th style={{ textAlign:'center' }}>Time</th>
+                <th style={{ textAlign:'center' }}>GMC</th>
                 <th>Requester Name</th>
                 <th>Scan type</th>
                 <th>Outcome</th>
@@ -164,12 +194,13 @@ export default function Radiologist(){
             </thead>
             <tbody>
               {history.map((h,i)=>(
-                <tr key={i}>
-                  <td>{formatDateTime(h.created_at)}</td>
+                <tr key={i} className={outcomeClass(h.outcome)}>
+                  <td>{formatDate(h.created_at)}</td>
+                  <td style={{ textAlign:'center' }}>{formatTime(h.created_at)}</td>
                   <td style={{ textAlign:'center' }}>{h.requester_gmc}</td>
                   <td>{h.requester_name || '-'}</td>
                   <td>{h.scan_type}</td>
-                  <td>{h.outcome}</td>
+                  <td style={{ textAlign:'center' }}>{formatOutcome(h.outcome)}</td>
                   <td style={{ textAlign:'center' }}>{h.clinical_information_score ?? '-'}</td>
                   <td style={{ textAlign:'center' }}>{h.indication_score ?? '-'}</td>
                   <td style={{ textAlign:'center' }}>{h.reason || '-'}</td>

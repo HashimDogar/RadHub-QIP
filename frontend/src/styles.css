@@ -48,12 +48,17 @@ button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .table tr.rank-2 { background:#c0c0c0; color:#000; }
 .dark .table tr.rank-1 { background:#b8860b; color:#000; }
 .dark .table tr.rank-2 { background:#9ca3af; color:#000; }
-.table.vetting-history { border:1px solid var(--border); }
-.table.vetting-history th, .table.vetting-history td { border:1px solid var(--border); }
-.dark .table.vetting-history { background: var(--bg); }
-.dark .table.vetting-history tr { background: var(--bg); }
-.dark .table.vetting-history th,
-.dark .table.vetting-history td { border:1px solid #fff; color:#fff; }
+.dark .vetting-history {
+  background: var(--bg);
+}
+.dark .vetting-history th,
+.dark .vetting-history td {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+}
+.dark .vetting-history tr {
+  background: var(--bg);
+}
 .dark .recent-request-history {
   background: var(--bg);
 }
