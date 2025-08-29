@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser } from '../lib/api'
+import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser, getRadHistory } from '../lib/api'
 import SummaryCard from '../components/SummaryCard'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
@@ -30,7 +30,10 @@ export default function Radiologist(){
   const [saved, setSaved] = useState('')
   const [msg, setMsg] = useState('')
 
-  useEffect(()=>{ radSession().then(s=>{ if(s?.active){ setCodeOk(true); if(s.gmc) setRadGmc(s.gmc); if(s.name) setRadName(s.name) } }) },[])
+  const [history, setHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+
+  useEffect(()=>{ radSession().then(async s=>{ if(s?.active){ setCodeOk(true); if(s.gmc){ setRadGmc(s.gmc); try{ const lk=await gmcLookup(s.gmc); setRadName(lk?.name||'') }catch{} } } }) },[])
 
   function isValidGmc(v){ return /^\d{7}$/.test((v||'').trim()) }
   const OUTCOME_OPTIONS = [
@@ -45,7 +48,15 @@ export default function Radiologist(){
     setUnlockBusy(true)
     try{
       const r = await radUnlock(accessCode.trim(), radGmc.trim())
-      if (r?.ok) { setCodeOk(true); setMsg(''); if(r.name) setRadName(r.name); if(r.gmc) setRadGmc(r.gmc) } else setMsg(r?.error||'Invalid code')
+      if (r?.ok) {
+        setCodeOk(true)
+        setMsg('')
+        if(r.gmc) setRadGmc(r.gmc)
+        if(r.name) setRadName(r.name)
+        else {
+          try{ const lk=await gmcLookup(radGmc.trim()); setRadName(lk?.name||'') }catch{}
+        }
+      } else setMsg(r?.error||'Invalid code')
     } finally { setUnlockBusy(false) }
   }
 
@@ -67,6 +78,10 @@ export default function Radiologist(){
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
     setGmc(''); setScanType(''); setOtherScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
+    if (showHistory){
+      const h = await getRadHistory()
+      if (h && !h.error) setHistory(h.history || [])
+    }
   }
 
   async function createUserNow(){
@@ -79,6 +94,14 @@ export default function Radiologist(){
     } else {
       setMsg(r?.error || 'Failed to create user')
     }
+  }
+
+  async function toggleHistory(){
+    if (!showHistory){
+      const res = await getRadHistory()
+      if (res && !res.error) setHistory(res.history || [])
+    }
+    setShowHistory(!showHistory)
   }
 
   if (!codeOk){
@@ -97,6 +120,41 @@ export default function Radiologist(){
 
   return (
     <div className="grid">
+      <section className="card">
+        <h3>{radName || '-'}</h3>
+        <div>Role: Radiologist</div>
+        <button style={{ marginTop: 8 }} onClick={toggleHistory}>{showHistory ? 'Hide vetting history' : 'Show vetting history'}</button>
+        {showHistory && (
+          <table style={{ marginTop: 12 }}>
+            <thead>
+              <tr>
+                <th>Requester GMC</th>
+                <th>Requester Name</th>
+                <th>Scan type</th>
+                <th>Outcome</th>
+                <th>Quality score</th>
+                <th>Clinical info score</th>
+                <th>Indication score</th>
+                <th>Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h,i)=>(
+                <tr key={i}>
+                  <td>{h.requester_gmc}</td>
+                  <td>{h.requester_name || '-'}</td>
+                  <td>{h.scan_type}</td>
+                  <td>{h.outcome}</td>
+                  <td>{h.quality_score ?? '-'}</td>
+                  <td>{h.clinical_information_score ?? '-'}</td>
+                  <td>{h.indication_score ?? '-'}</td>
+                  <td>{h.reason || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
       <section className="card">
         <h2>Out-of-hours CT vetting</h2>
         <div className="row">

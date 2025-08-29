@@ -130,33 +130,51 @@ export default function Audit(){
           <table className="table">
             <thead>
               <tr>
+                <th style={{ textAlign: 'center' }}>GMC</th>
                 <th>Name</th>
-                <th>GMC</th>
                 <th>Hospital</th>
                 <th>Specialty</th>
                 <th>Grade</th>
-                <th>Score</th>
+                <th style={{ textAlign: 'center' }}>Request points</th>
+                <th style={{ textAlign: 'center' }}>Info rating</th>
+                <th style={{ textAlign: 'center' }}>Indication rating</th>
+                <th style={{ textAlign: 'center' }}>Quality score</th>
                 <th>Total</th>
-                <th>Accepted</th>
-                <th>Delayed</th>
-                <th>Rejected</th>
+                <th style={{ textAlign: 'center' }}>Accepted</th>
+                <th style={{ textAlign: 'center' }}>Delayed</th>
+                <th style={{ textAlign: 'center' }}>Rejected</th>
               </tr>
             </thead>
             <tbody>
-              {users.map(u=>
-                <tr key={u.gmc}>
-                  <td>{u.name || '-'}</td>
-                  <td>{u.gmc}</td>
-                  <td>{u.hospital || '-'}</td>
-                  <td>{u.specialty || '-'}</td>
-                  <td>{u.grade || '-'}</td>
-                  <td>{u.score}</td>
-                  <td>{u.total}</td>
-                  <td>{u.accepted}</td>
-                  <td>{u.delayed}</td>
-                  <td>{u.rejected}</td>
-                </tr>
-              )}
+              {users.map(u => {
+                const qn = u.avg_quality || 0
+                const an = u.avg_appropriateness || 0
+                const qAvg = qn.toFixed(1)
+                const aAvg = an.toFixed(1)
+                const cappedScore = Math.max(0, Math.min(u.score || 0, 1000))
+                const baseAvg = (qn + an) / 2
+                const reqScore = Math.max(
+                  0,
+                  Math.min(10, baseAvg + (cappedScore / 1000) * (10 - baseAvg))
+                ).toFixed(1)
+                return (
+                  <tr key={u.gmc}>
+                    <td style={{ textAlign: 'center' }}>{u.gmc}</td>
+                    <td>{u.name || '-'}</td>
+                    <td>{u.hospital || '-'}</td>
+                    <td>{u.specialty || '-'}</td>
+                    <td>{u.grade || '-'}</td>
+                    <td style={{ textAlign: 'center' }}>{u.score}</td>
+                    <td style={{ textAlign: 'center' }}>{qAvg}</td>
+                    <td style={{ textAlign: 'center' }}>{aAvg}</td>
+                    <td style={{ textAlign: 'center' }}>{reqScore}</td>
+                    <td>{u.total}</td>
+                    <td style={{ textAlign: 'center' }}>{u.accepted}</td>
+                    <td style={{ textAlign: 'center' }}>{u.delayed}</td>
+                    <td style={{ textAlign: 'center' }}>{u.rejected}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -168,31 +186,35 @@ export default function Audit(){
           <table className="table">
             <thead>
               <tr>
-                <th>GMC</th>
+                <th style={{ textAlign: 'center' }}>GMC</th>
                 <th>Name</th>
-                <th>Requests Vetted</th>
-                <th>Accepted</th>
-                <th>Delayed</th>
-                <th>Rejected</th>
-                <th>More Info</th>
-                <th>Avg Appropriateness</th>
-                <th>Avg Quality</th>
+                <th style={{ textAlign: 'center' }}>Requests Vetted</th>
+                <th style={{ textAlign: 'center' }}>Accepted</th>
+                <th style={{ textAlign: 'center' }}>Delayed</th>
+                <th style={{ textAlign: 'center' }}>Rejected</th>
+                <th style={{ textAlign: 'center' }}>More Info</th>
+                <th style={{ textAlign: 'center' }}>Avg Indication</th>
+                <th style={{ textAlign: 'center' }}>Avg Info</th>
               </tr>
             </thead>
             <tbody>
-              {rads.map(r=>
+              {rads.map(r => (
                 <tr key={r.gmc}>
-                  <td>{r.gmc}</td>
+                  <td style={{ textAlign: 'center' }}>{r.gmc}</td>
                   <td>{r.name || '-'}</td>
-                  <td>{r.total}</td>
-                  <td>{r.accepted}</td>
-                  <td>{r.delayed}</td>
-                  <td>{r.rejected}</td>
-                  <td>{r.info_needed}</td>
-                  <td>{r.avg_appropriateness != null ? r.avg_appropriateness.toFixed(2) : '-'}</td>
-                  <td>{r.avg_quality != null ? r.avg_quality.toFixed(2) : '-'}</td>
+                  <td style={{ textAlign: 'center' }}>{r.total}</td>
+                  <td style={{ textAlign: 'center' }}>{r.accepted}</td>
+                  <td style={{ textAlign: 'center' }}>{r.delayed}</td>
+                  <td style={{ textAlign: 'center' }}>{r.rejected}</td>
+                  <td style={{ textAlign: 'center' }}>{r.info_needed}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    {r.avg_appropriateness != null ? r.avg_appropriateness.toFixed(2) : '-'}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {r.avg_quality != null ? r.avg_quality.toFixed(2) : '-'}
+                  </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>

@@ -70,6 +70,11 @@ export async function radSession() {
   return r.json();
 }
 
+export async function getRadHistory(limit = 15) {
+  const r = await fetch(`/api/v1/rad/history?limit=${encodeURIComponent(limit)}`, { credentials: 'include' });
+  return r.json();
+}
+
 export async function downloadRawCsv() {
   return `/api/v1/audit/raw-csv`;
 }

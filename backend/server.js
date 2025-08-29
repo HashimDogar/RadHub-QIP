@@ -101,6 +101,27 @@ app.get('/api/v1/rad/session', (req, res) => {
   res.json({ active, gmc: active ? g : null })
 })
 
+app.get('/api/v1/rad/history', (req, res) => {
+  const g = req.cookies.rad_gmc
+  const active = req.cookies.rad_session === '1' && isValidGmc(g)
+  if (!active) return res.status(401).json({ error: 'Not authorised' })
+  const limit = Math.min(50, parseInt(req.query.limit) || 15)
+  const rows = db.prepare(`
+    SELECT u.gmc AS requester_gmc, r.requester_name_at_request AS requester_name,
+           r.scan_type, r.outcome,
+           r.request_quality AS quality_score,
+           r.request_quality AS clinical_information_score,
+           r.request_appropriateness AS indication_score,
+           r.reason
+    FROM requests r
+    JOIN users u ON r.user_id = u.id
+    WHERE r.radiologist_gmc = ?
+    ORDER BY r.id DESC
+    LIMIT ?
+  `).all(g, limit)
+  res.json({ history: rows })
+})
+
 // GMC lookup
 app.get('/api/v1/gmc/lookup/:gmc', async (req, res)=>{
   const gmc = String(req.params.gmc||'').trim()
@@ -141,6 +162,12 @@ app.get('/api/v1/users', (req, res) => {
     const accepted = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0
     const delayed = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
     const rejected = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
+    const avgs =
+      db
+        .prepare(
+          'SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?'
+        )
+        .get(u.id) || { avg_quality: null, avg_appropriateness: null }
     return {
       gmc: u.gmc,
       name: u.name || null,
@@ -151,7 +178,9 @@ app.get('/api/v1/users', (req, res) => {
       total,
       accepted,
       delayed,
-      rejected
+      rejected,
+      avg_quality: avgs.avg_quality,
+      avg_appropriateness: avgs.avg_appropriateness
     }
   })
   res.json({ users })
