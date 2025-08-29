@@ -42,6 +42,13 @@ function outcomeClass(outcome) {
   }
 }
 
+function formatSigFig(value) {
+  if (value == null) return '—'
+  const num = Number(value)
+  if (isNaN(num)) return value
+  return Number(num.toPrecision(3)).toString()
+}
+
 export default function RecentRequestHistory({ requests = [] }) {
   const [expanded, setExpanded] = useState(false)
   const sorted = [...requests].sort((a, b) => {
@@ -88,8 +95,8 @@ export default function RecentRequestHistory({ requests = [] }) {
                 <td title={r.reason?.trim() ? r.reason : undefined}>
                   {r.reason?.trim() ? r.reason : '—'}
                 </td>
-                <td>{r.request_appropriateness != null ? r.request_appropriateness : '—'}</td>
-                <td>{r.request_quality != null ? r.request_quality : '—'}</td>
+                <td>{formatSigFig(r.request_appropriateness)}</td>
+                <td>{formatSigFig(r.request_quality)}</td>
               </tr>
             ))}
           </tbody>
