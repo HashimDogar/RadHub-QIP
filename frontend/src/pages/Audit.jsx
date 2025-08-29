@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { downloadRawCsv, getUsers, updateUser, deleteUser, getUser } from '../lib/api'
+import { downloadRawCsv, getUsers, getRadiologists, updateUser, deleteUser, getUser } from '../lib/api'
 
 export default function Audit(){
   const [pin, setPin] = useState('')
   const [ok, setOk] = useState(false)
   const [users, setUsers] = useState([])
+  const [rads, setRads] = useState([])
   const [updGmc, setUpdGmc] = useState('')
   const [updName, setUpdName] = useState('')
   const [updHospital, setUpdHospital] = useState('')
@@ -14,7 +15,7 @@ export default function Audit(){
 
   function unlock(){ if (pin.trim() === '221199') setOk(true); else alert('Incorrect PIN') }
 
-  useEffect(()=>{ if(ok) loadUsers() }, [ok])
+  useEffect(()=>{ if(ok){ loadUsers(); loadRads() } }, [ok])
 
   useEffect(()=>{
     const g = updGmc.trim()
@@ -54,6 +55,11 @@ export default function Audit(){
     setUsers(r.users || [])
   }
 
+  async function loadRads(){
+    const r = await getRadiologists()
+    setRads(r.radiologists || [])
+  }
+
   async function doUpdate(){
     const g = updGmc.trim()
     if(!/^\d{7}$/.test(g)){ alert('Enter valid GMC'); return }
@@ -90,6 +96,7 @@ export default function Audit(){
     setUpdGrade('')
     setNewScore('')
     loadUsers()
+    loadRads()
   }
 
   if (!ok){
@@ -148,6 +155,42 @@ export default function Audit(){
                   <td>{u.accepted}</td>
                   <td>{u.delayed}</td>
                   <td>{u.rejected}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ marginTop:'2rem' }}>
+        <h3>Registered Radiologists</h3>
+        <div style={{ overflowX:'auto' }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>GMC</th>
+                <th>Name</th>
+                <th>Requests Vetted</th>
+                <th>Accepted</th>
+                <th>Delayed</th>
+                <th>Rejected</th>
+                <th>More Info</th>
+                <th>Avg Appropriateness</th>
+                <th>Avg Quality</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rads.map(r=>
+                <tr key={r.gmc}>
+                  <td>{r.gmc}</td>
+                  <td>{r.name || '-'}</td>
+                  <td>{r.total}</td>
+                  <td>{r.accepted}</td>
+                  <td>{r.delayed}</td>
+                  <td>{r.rejected}</td>
+                  <td>{r.info_needed}</td>
+                  <td>{r.avg_appropriateness != null ? r.avg_appropriateness.toFixed(2) : '-'}</td>
+                  <td>{r.avg_quality != null ? r.avg_quality.toFixed(2) : '-'}</td>
                 </tr>
               )}
             </tbody>

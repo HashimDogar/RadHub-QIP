@@ -55,6 +55,11 @@ CREATE TABLE IF NOT EXISTS requests (
   request_appropriateness INTEGER,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS radiologists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  gmc TEXT UNIQUE,
+  name TEXT
+);
 `)
 
 // migrate for new columns if existing DB
@@ -152,6 +157,30 @@ app.get('/api/v1/users', (req, res) => {
   res.json({ users })
 })
 
+app.get('/api/v1/radiologists', (req, res) => {
+  const rows = db.prepare('SELECT id, gmc, name FROM radiologists').all()
+  const radiologists = rows.map(r => {
+    const total = db.prepare('SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ?').get(r.gmc).c || 0
+    const accepted = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='accepted'").get(r.gmc).c || 0
+    const delayed = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='delayed'").get(r.gmc).c || 0
+    const rejected = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='rejected'").get(r.gmc).c || 0
+    const info = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='info_needed'").get(r.gmc).c || 0
+    const avgs = db.prepare('SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE radiologist_gmc = ?').get(r.gmc) || { avg_quality:null, avg_appropriateness:null }
+    return {
+      gmc: r.gmc,
+      name: r.name || null,
+      total,
+      accepted,
+      delayed,
+      rejected,
+      info_needed: info,
+      avg_quality: avgs.avg_quality,
+      avg_appropriateness: avgs.avg_appropriateness
+    }
+  })
+  res.json({ radiologists })
+})
+
 // Create/update user
 app.post('/api/v1/user/:gmc/update', async (req, res)=>{
   const gmc = String(req.params.gmc||'').trim()
@@ -177,10 +206,17 @@ app.delete('/api/v1/user/:gmc', (req, res) => {
   const gmc = String(req.params.gmc || '').trim()
   if (!isValidGmc(gmc)) return res.status(400).json({ error: 'Invalid GMC' })
   const user = db.prepare('SELECT id FROM users WHERE gmc = ?').get(gmc)
-  if (!user) return res.status(404).json({ error: 'User not recognised' })
-  db.prepare('DELETE FROM requests WHERE user_id = ?').run(user.id)
-  db.prepare('DELETE FROM users WHERE id = ?').run(user.id)
-  res.json({ ok: true })
+  if (user) {
+    db.prepare('DELETE FROM requests WHERE user_id = ?').run(user.id)
+    db.prepare('DELETE FROM users WHERE id = ?').run(user.id)
+    return res.json({ ok: true, user: true })
+  }
+  const rad = db.prepare('SELECT id FROM radiologists WHERE gmc = ?').get(gmc)
+  if (rad) {
+    db.prepare('DELETE FROM radiologists WHERE id = ?').run(rad.id)
+    return res.json({ ok: true, radiologist: true })
+  }
+  res.status(404).json({ error: 'User not recognised' })
 })
 
 // Vet/save
@@ -196,6 +232,12 @@ app.post('/api/v1/vet', async (req, res) => {
     const pts = outcome==='accepted' ? 5 : outcome==='delayed' || outcome==='info_needed' ? -5 : -10
     const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
     const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
+
+    let rad = db.prepare('SELECT id FROM radiologists WHERE gmc = ?').get(radiologist_gmc)
+    if (!rad) {
+      const rname = await lookupGmcName(radiologist_gmc)
+      db.prepare('INSERT INTO radiologists (gmc, name) VALUES (?, ?)').run(radiologist_gmc, rname || null)
+    }
 
     let user = db.prepare('SELECT * FROM users WHERE gmc = ?').get(requester_gmc)
     if (!user) {

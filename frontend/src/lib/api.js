@@ -39,6 +39,11 @@ export async function getUsers() {
   return r.json();
 }
 
+export async function getRadiologists() {
+  const r = await fetch(`/api/v1/radiologists`, { credentials: 'include' });
+  return r.json();
+}
+
 export async function gmcLookup(gmc) {
   const r = await fetch(`/api/v1/gmc/lookup/${encodeURIComponent(gmc)}`, { credentials: 'include' });
   return r.json();
