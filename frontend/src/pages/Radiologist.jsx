@@ -177,16 +177,6 @@ export default function Radiologist(){
           </section>
         )}
 
-        {snapshot && (
-          <SummaryCard
-            stats={snapshot.stats}
-            score={snapshot.user.score}
-            requests={snapshot.requests}
-            showLegend
-            style={{ marginTop: 12 }}
-          />
-        )}
-
         {showNewUserProfile && (
           <div className="card" style={{ marginTop: 12, border:'1px dashed var(--border)' }}>
             <h3>New requester profile</h3>
@@ -297,6 +287,17 @@ export default function Radiologist(){
             {saved && <span style={{ marginLeft: 12 }}>{saved}</span>}
           </div>
         {msg && <p className="error">{msg}</p>}
+      </section>
+      <section className="Card">
+      {snapshot && (
+          <SummaryCard
+            stats={snapshot.stats}
+            score={snapshot.user.score}
+            requests={snapshot.requests}
+            showLegend
+            style={{ marginTop: 12 }}
+          />
+        )}
       </section>
     </div>
   )
