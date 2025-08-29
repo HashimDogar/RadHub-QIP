@@ -242,9 +242,12 @@ function computeRankings({ hospital, specialty, metric }){
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
     const avgs = db.prepare('SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?').get(u.id) || { avg_quality:null, avg_appropriateness:null }
     const pct = (n)=> total ? (n/total)*100 : 0
-    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:Math.min(u.score||0,1000), total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del), avg_quality:avgs.avg_quality, avg_appropriateness:avgs.avg_appropriateness }
+    const cappedScore = Math.min(Math.max(u.score||0,0),1000)
+    const baseAvg = ((avgs.avg_quality||0) + (avgs.avg_appropriateness||0)) / 2
+    const reqRating = Math.max(0, Math.min(10, baseAvg + (cappedScore/1000)*(10-baseAvg)))
+    return { gmc:u.gmc, name:u.name||null, hospital:u.hospital||null, specialty:u.specialty||null, grade:u.grade||null, score:cappedScore, total, pct_accepted:pct(acc), pct_rejected:pct(rej), pct_delayed:pct(del), avg_quality:avgs.avg_quality, avg_appropriateness:avgs.avg_appropriateness, requestor_score_rating:reqRating }
   })
-  const key = metric==='score' ? 'score' : metric
+  const key = metric==='score' ? 'requestor_score_rating' : metric
   rows.sort((a,b)=>(b[key]||0)-(a[key]||0))
   rows.forEach((r,i)=>{ r.rank = i+1 })
   return rows

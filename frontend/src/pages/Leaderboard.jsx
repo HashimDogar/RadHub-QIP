@@ -21,12 +21,14 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
     setInfo(r)
   }
 
-  const keyMap = { score:'score', quality:'avg_quality', appropriateness:'avg_appropriateness' }
+  const keyMap = { score:'requestor_score_rating', quality:'avg_quality', appropriateness:'avg_appropriateness' }
   const key = keyMap[metric] || metric
+  const population = hospital && specialty ? `${hospital} / ${specialty}` : (hospital || specialty || 'Global')
 
   return (
     <section className="card">
       <h3>{title}</h3>
+      <p className="muted" style={{ marginTop:0 }}>{population}</p>
       {highlightGmc && info && info.rank_index >= 0 && (
         <p className="muted" style={{ marginTop:0 }}>You are ranked {info.rank_index+1} of {info.total}</p>
       )}
@@ -38,7 +40,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
               <th>Name</th>
               <th>Hospital</th>
               <th>Specialty</th>
-              <th>Score</th>
+              <th>{metric==='score' ? 'Overall rating' : 'Score'}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,7 +52,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
                 <td>{r.name || '-'}</td>
                 <td>{r.hospital || '-'}</td>
                 <td>{r.specialty || '-'}</td>
-                <td>{key==='score' ? r.score : (r[key] ? Number(r[key]).toFixed(1) : '-')}</td>
+                <td>{metric==='score' ? (r.requestor_score_rating!=null ? Number(r.requestor_score_rating).toFixed(1) : '-') : (r[key]!=null ? Number(r[key]).toFixed(1) : '-')}</td>
               </tr>
             ))}
           </tbody>
@@ -100,7 +102,7 @@ export default function Leaderboard(){
 
       {localUser && (
         <>
-          <LeaderboardTable metric="score" title={`Overall rating – ${localUser.hospital || '-'} / ${localUser.specialty || '-'}`} hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
+          <LeaderboardTable metric="score" title="Overall rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
             <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
             <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
@@ -126,17 +128,17 @@ export default function Leaderboard(){
             </select>
           </div>
           <div className="actions" style={{ alignSelf:'end' }}>
-            <button className="primary" onClick={()=>setFind(find+1)} disabled={!findHospital || !findSpecialty}>Show</button>
+            <button className="primary" onClick={()=>setFind(find+1)} disabled={!findHospital && !findSpecialty}>Show</button>
           </div>
         </div>
       </section>
 
-      {findHospital && findSpecialty && find>0 && (
+      {(findHospital || findSpecialty) && find>0 && (
         <>
-          <LeaderboardTable metric="score" title={`Overall rating – ${findHospital} / ${findSpecialty}`} hospital={findHospital} specialty={findSpecialty} />
+          <LeaderboardTable metric="score" title="Overall rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
-            <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={findHospital} specialty={findSpecialty} />
-            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={findHospital} specialty={findSpecialty} />
+            <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
+            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
           </div>
         </>
       )}
