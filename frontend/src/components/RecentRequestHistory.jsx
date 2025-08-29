@@ -75,8 +75,8 @@ export default function RecentRequestHistory({ requests = [] }) {
               <th>Scan Type</th>
               <th>Outcome</th>
               <th>Feedback</th>
-              <th>Appropriateness</th>
-              <th>Quality</th>
+              <th>Indication</th>
+              <th>Clinical info</th>
             </tr>
           </thead>
           <tbody>
