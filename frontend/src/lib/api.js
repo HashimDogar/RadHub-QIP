@@ -26,6 +26,14 @@ export async function updateUser(gmc, payload) {
   return r.json();
 }
 
+export async function deleteUser(gmc) {
+  const r = await fetch(`/api/v1/user/${encodeURIComponent(gmc)}`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  return r.json();
+}
+
 export async function getUsers() {
   const r = await fetch(`/api/v1/users`, { credentials: 'include' });
   return r.json();

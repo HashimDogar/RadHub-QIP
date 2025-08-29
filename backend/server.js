@@ -172,6 +172,17 @@ app.post('/api/v1/user/:gmc/update', async (req, res)=>{
   }
 })
 
+// Delete user and associated requests
+app.delete('/api/v1/user/:gmc', (req, res) => {
+  const gmc = String(req.params.gmc || '').trim()
+  if (!isValidGmc(gmc)) return res.status(400).json({ error: 'Invalid GMC' })
+  const user = db.prepare('SELECT id FROM users WHERE gmc = ?').get(gmc)
+  if (!user) return res.status(404).json({ error: 'User not recognised' })
+  db.prepare('DELETE FROM requests WHERE user_id = ?').run(user.id)
+  db.prepare('DELETE FROM users WHERE id = ?').run(user.id)
+  res.json({ ok: true })
+})
+
 // Vet/save
 app.post('/api/v1/vet', async (req, res) => {
   try {

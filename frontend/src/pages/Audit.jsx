@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { downloadRawCsv, getUsers, updateUser } from '../lib/api'
+import { downloadRawCsv, getUsers, updateUser, deleteUser } from '../lib/api'
 
 export default function Audit(){
   const [pin, setPin] = useState('')
   const [ok, setOk] = useState(false)
   const [users, setUsers] = useState([])
   const [updGmc, setUpdGmc] = useState('')
+  const [updName, setUpdName] = useState('')
+  const [updHospital, setUpdHospital] = useState('')
+  const [updSpecialty, setUpdSpecialty] = useState('')
+  const [updGrade, setUpdGrade] = useState('')
   const [newScore, setNewScore] = useState('')
 
   function unlock(){ if (pin.trim() === '221199') setOk(true); else alert('Incorrect PIN') }
@@ -19,10 +23,38 @@ export default function Audit(){
 
   async function doUpdate(){
     const g = updGmc.trim()
-    const s = parseInt(newScore)
-    if(!/^\d{7}$/.test(g) || isNaN(s)){ alert('Enter valid GMC and score'); return }
-    await updateUser(g, { score:s })
+    if(!/^\d{7}$/.test(g)){ alert('Enter valid GMC'); return }
+    const payload = {}
+    if (updName.trim()) payload.name = updName.trim()
+    if (updHospital.trim()) payload.hospital = updHospital.trim()
+    if (updSpecialty.trim()) payload.specialty = updSpecialty.trim()
+    if (updGrade.trim()) payload.grade = updGrade.trim()
+    if (newScore.trim() !== ''){
+      const s = parseInt(newScore)
+      if (isNaN(s)) { alert('Enter valid score'); return }
+      payload.score = s
+    }
+    if (Object.keys(payload).length === 0){ alert('Enter details to update'); return }
+    await updateUser(g, payload)
     setUpdGmc('')
+    setUpdName('')
+    setUpdHospital('')
+    setUpdSpecialty('')
+    setUpdGrade('')
+    setNewScore('')
+    loadUsers()
+  }
+
+  async function doDelete(){
+    const g = updGmc.trim()
+    if(!/^\d{7}$/.test(g)){ alert('Enter valid GMC'); return }
+    if(!window.confirm('Delete this user?')) return
+    await deleteUser(g)
+    setUpdGmc('')
+    setUpdName('')
+    setUpdHospital('')
+    setUpdSpecialty('')
+    setUpdGrade('')
     setNewScore('')
     loadUsers()
   }
@@ -91,18 +123,35 @@ export default function Audit(){
       </div>
 
       <div style={{ marginTop:'2rem' }}>
-        <h3>Update Score</h3>
+        <h3>Manage User</h3>
         <div className="row">
           <div style={{ minWidth:150 }}>
             <label>GMC number</label>
             <input value={updGmc} onChange={e=>setUpdGmc(e.target.value)} placeholder="e.g. 1234567" />
           </div>
           <div style={{ minWidth:150 }}>
+            <label>Name</label>
+            <input value={updName} onChange={e=>setUpdName(e.target.value)} />
+          </div>
+          <div style={{ minWidth:150 }}>
+            <label>Hospital</label>
+            <input value={updHospital} onChange={e=>setUpdHospital(e.target.value)} />
+          </div>
+          <div style={{ minWidth:150 }}>
+            <label>Specialty</label>
+            <input value={updSpecialty} onChange={e=>setUpdSpecialty(e.target.value)} />
+          </div>
+          <div style={{ minWidth:150 }}>
+            <label>Grade</label>
+            <input value={updGrade} onChange={e=>setUpdGrade(e.target.value)} />
+          </div>
+          <div style={{ minWidth:150 }}>
             <label>New total score</label>
             <input type="number" value={newScore} onChange={e=>setNewScore(e.target.value)} />
           </div>
-          <div className="actions" style={{ alignSelf:'end' }}>
+          <div className="actions" style={{ alignSelf:'end', display:'flex', gap:'8px' }}>
             <button className="primary" onClick={doUpdate}>Update</button>
+            <button onClick={doDelete}>Delete</button>
           </div>
         </div>
       </div>
