@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { downloadRawCsv, getUsers, updateUser, deleteUser } from '../lib/api'
+import { downloadRawCsv, getUsers, updateUser, deleteUser, getUser } from '../lib/api'
 
 export default function Audit(){
   const [pin, setPin] = useState('')
@@ -15,6 +15,39 @@ export default function Audit(){
   function unlock(){ if (pin.trim() === '221199') setOk(true); else alert('Incorrect PIN') }
 
   useEffect(()=>{ if(ok) loadUsers() }, [ok])
+
+  useEffect(()=>{
+    const g = updGmc.trim()
+    if(/^\d{7}$/.test(g)){
+      getUser(g).then(r=>{
+        if(r && r.user){
+          setUpdName(r.user.name || '')
+          setUpdHospital(r.user.hospital || '')
+          setUpdSpecialty(r.user.specialty || '')
+          setUpdGrade(r.user.grade || '')
+          setNewScore(String(r.user.score ?? ''))
+        } else {
+          setUpdName('')
+          setUpdHospital('')
+          setUpdSpecialty('')
+          setUpdGrade('')
+          setNewScore('')
+        }
+      }).catch(()=>{
+        setUpdName('')
+        setUpdHospital('')
+        setUpdSpecialty('')
+        setUpdGrade('')
+        setNewScore('')
+      })
+    } else {
+      setUpdName('')
+      setUpdHospital('')
+      setUpdSpecialty('')
+      setUpdGrade('')
+      setNewScore('')
+    }
+  }, [updGmc])
 
   async function loadUsers(){
     const r = await getUsers()
