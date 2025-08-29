@@ -40,7 +40,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
               <th>Name</th>
               <th>Hospital</th>
               <th>Specialty</th>
-              <th>{metric==='score' ? 'Overall rating' : 'Score'}</th>
+              <th style={{ textAlign:'center' }}>Score</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@ function LeaderboardTable({ metric, title, hospital, specialty, highlightGmc }){
                 <td>{r.name || '-'}</td>
                 <td>{r.hospital || '-'}</td>
                 <td>{r.specialty || '-'}</td>
-                <td>{metric==='score' ? (r.requestor_score_rating!=null ? Number(r.requestor_score_rating).toFixed(1) : '-') : (r[key]!=null ? Number(r[key]).toFixed(1) : '-')}</td>
+                <td style={{ textAlign:'center' }}>{metric==='score' ? (r.requestor_score_rating!=null ? Number(r.requestor_score_rating).toFixed(1) : '-') : (r[key]!=null ? Number(r[key]).toFixed(1) : '-')}</td>
               </tr>
             ))}
           </tbody>
@@ -89,15 +89,15 @@ export default function Leaderboard(){
 
       <section className="card" style={{ marginTop:'2rem' }}>
         <h3>Type in your GMC number to see your local leaderboard</h3>
-        <div className="row">
+        <form className="row" onSubmit={e=>{e.preventDefault(); lookup();}}>
           <div style={{ minWidth:240, flex:'1 1 240px' }}>
             <label>GMC number</label>
             <input value={gmc} onChange={e=>setGmc(e.target.value.replace(/\D/g,'').slice(0,7))} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
           </div>
           <div className="actions" style={{ alignSelf:'end' }}>
-            <button className="primary" onClick={lookup}>View</button>
+            <button className="primary" type="submit">View</button>
           </div>
-        </div>
+        </form>
       </section>
 
       {localUser && (
