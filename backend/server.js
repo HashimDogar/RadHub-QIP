@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS requests (
   radiologist_gmc TEXT,
   request_quality INTEGER,
   request_appropriateness INTEGER,
+  request_quality_norm REAL,
+  request_appropriateness_norm REAL,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS radiologists (
@@ -65,9 +67,24 @@ CREATE TABLE IF NOT EXISTS radiologists (
 // migrate for new columns if existing DB
 try{ db.exec('ALTER TABLE requests ADD COLUMN request_quality INTEGER') }catch{}
 try{ db.exec('ALTER TABLE requests ADD COLUMN request_appropriateness INTEGER') }catch{}
+try{ db.exec('ALTER TABLE requests ADD COLUMN request_quality_norm REAL') }catch{}
+try{ db.exec('ALTER TABLE requests ADD COLUMN request_appropriateness_norm REAL') }catch{}
 
 function isValidGmc(g){ return /^\d{7}$/.test(String(g||'').trim()) }
 function normaliseName(s){ return s ? String(s).replace(/\s+/g,' ').trim() : null }
+
+function withinRaterNorm(gmc, column, raw){
+  if(raw == null) return null
+  const rows = db.prepare(`SELECT ${column} AS v FROM requests WHERE radiologist_gmc = ? AND ${column} IS NOT NULL`).all(gmc)
+  if(rows.length < 2) return raw
+  const vals = rows.map(r=>r.v)
+  const mean = vals.reduce((a,b)=>a+b,0)/vals.length
+  const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length)
+  if(sd === 0) return 5
+  const z = (raw - mean) / sd
+  const norm = Math.max(1, Math.min(10, 5 + z))
+  return norm
+}
 
 async function lookupGmcName(gmc){
   try{
@@ -157,11 +174,12 @@ app.get('/api/v1/user/:gmc', (req, res)=>{
       SUM(CASE WHEN outcome='rejected' THEN 1 ELSE 0 END) AS rejected
     FROM requests WHERE user_id = ?
   `).get(user.id) || { accepted:0, delayed:0, rejected:0 }
-  const avgs = db.prepare(`SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?`).get(user.id) || { avg_quality: null, avg_appropriateness: null }
+  const avgs = db.prepare(`SELECT AVG(COALESCE(request_quality_norm, request_quality)) as avg_quality, AVG(COALESCE(request_appropriateness_norm, request_appropriateness)) as avg_appropriateness FROM requests WHERE user_id = ?`).get(user.id) || { avg_quality: null, avg_appropriateness: null }
   const reqs = db.prepare(`
     SELECT id, created_at, scan_type, outcome, points_change, reason, discussed_with_senior,
            requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request,
-           request_quality, request_appropriateness
+           COALESCE(request_quality_norm, request_quality) AS request_quality,
+           COALESCE(request_appropriateness_norm, request_appropriateness) AS request_appropriateness
     FROM requests WHERE user_id = ? ORDER BY id DESC LIMIT 25
   `).all(user.id)
   res.json({ user, stats:{ counts, avg_request_quality: avgs.avg_quality, avg_request_appropriateness: avgs.avg_appropriateness }, requests:reqs })
@@ -178,7 +196,7 @@ app.get('/api/v1/users', (req, res) => {
     const avgs =
       db
         .prepare(
-          'SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?'
+          'SELECT AVG(COALESCE(request_quality_norm, request_quality)) as avg_quality, AVG(COALESCE(request_appropriateness_norm, request_appropriateness)) as avg_appropriateness FROM requests WHERE user_id = ?'
         )
         .get(u.id) || { avg_quality: null, avg_appropriateness: null }
     return {
@@ -207,7 +225,7 @@ app.get('/api/v1/radiologists', (req, res) => {
     const delayed = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='delayed'").get(r.gmc).c || 0
     const rejected = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='rejected'").get(r.gmc).c || 0
     const info = db.prepare("SELECT COUNT(*) as c FROM requests WHERE radiologist_gmc = ? AND outcome='info_needed'").get(r.gmc).c || 0
-    const avgs = db.prepare('SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE radiologist_gmc = ?').get(r.gmc) || { avg_quality:null, avg_appropriateness:null }
+    const avgs = db.prepare('SELECT AVG(COALESCE(request_quality_norm, request_quality)) as avg_quality, AVG(COALESCE(request_appropriateness_norm, request_appropriateness)) as avg_appropriateness FROM requests WHERE radiologist_gmc = ?').get(r.gmc) || { avg_quality:null, avg_appropriateness:null }
     return {
       gmc: r.gmc,
       name: r.name || null,
@@ -274,6 +292,8 @@ app.post('/api/v1/vet', async (req, res) => {
     const pts = outcome==='accepted' ? 5 : outcome==='delayed' || outcome==='info_needed' ? -5 : -10
     const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
     const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
+    const rqNorm = withinRaterNorm(radiologist_gmc, 'request_quality', rq)
+    const raNorm = withinRaterNorm(radiologist_gmc, 'request_appropriateness', ra)
 
     let rad = db.prepare('SELECT id FROM radiologists WHERE gmc = ?').get(radiologist_gmc)
     if (!rad) {
@@ -297,8 +317,8 @@ app.post('/api/v1/vet', async (req, res) => {
     const snapHosp = hospital || user.hospital || null
     const snapName = name || user.name || null
 
-    db.prepare(`INSERT INTO requests (user_id, requester_score_at_request, requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request, requester_name_at_request, discussed_with_senior, scan_type, outcome, points_change, reason, radiologist_gmc, request_quality, request_appropriateness) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(user.id, Math.min(user.score||0, 1000), snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc, rq, ra)
+    db.prepare(`INSERT INTO requests (user_id, requester_score_at_request, requester_specialty_at_request, requester_grade_at_request, requester_hospital_at_request, requester_name_at_request, discussed_with_senior, scan_type, outcome, points_change, reason, radiologist_gmc, request_quality, request_appropriateness, request_quality_norm, request_appropriateness_norm) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(user.id, Math.min(user.score||0, 1000), snapSpec, snapGrade, snapHosp, snapName, discussed_with_senior?1:0, scan_type, outcome, pts, reason||null, radiologist_gmc, rq, ra, rqNorm, raNorm)
 
     res.json({ ok:true, points_change: pts, new_score: newScore })
   } catch (e) {
@@ -324,7 +344,7 @@ function computeRankings({ hospital, specialty, metric }){
     const acc = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='accepted'").get(u.id).c || 0
     const rej = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='rejected'").get(u.id).c || 0
     const del = db.prepare("SELECT COUNT(*) as c FROM requests WHERE user_id = ? AND outcome='delayed'").get(u.id).c || 0
-    const avgs = db.prepare('SELECT AVG(request_quality) as avg_quality, AVG(request_appropriateness) as avg_appropriateness FROM requests WHERE user_id = ?').get(u.id) || { avg_quality:null, avg_appropriateness:null }
+    const avgs = db.prepare('SELECT AVG(COALESCE(request_quality_norm, request_quality)) as avg_quality, AVG(COALESCE(request_appropriateness_norm, request_appropriateness)) as avg_appropriateness FROM requests WHERE user_id = ?').get(u.id) || { avg_quality:null, avg_appropriateness:null }
     const pct = (n)=> total ? (n/total)*100 : 0
     const cappedScore = Math.min(Math.max(u.score||0,0),1000)
     const baseAvg = ((avgs.avg_quality||0) + (avgs.avg_appropriateness||0)) / 2
