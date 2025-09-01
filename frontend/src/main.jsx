@@ -14,8 +14,8 @@ function Header(){
 function Tabs({ tab, setTab }){
   const items = [
     { id:'dashboard', label:'User Dashboard' },
-    { id:'radiologist', label:'Radiologist' },
     { id:'leaderboard', label:'Leaderboard' },
+    { id:'radiologist', label:'Radiologist' },
     { id:'audit', label:'Audit' },
   ]
   return (
