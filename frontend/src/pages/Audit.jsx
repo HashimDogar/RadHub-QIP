@@ -189,7 +189,7 @@ export default function Audit(){
         <div className="row">
           <div style={{ minWidth: 220, flex:'1 1 220px' }}>
             <label>PIN</label>
-            <input value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="221199" />
+            <input value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="Enter PIN" />
           </div>
           <div className="actions" style={{ alignSelf:'end' }}>
             <button className="primary" onClick={unlock}>Unlock</button>

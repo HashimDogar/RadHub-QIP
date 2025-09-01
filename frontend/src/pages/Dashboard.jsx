@@ -183,7 +183,7 @@ export default function Dashboard(){
             <b>Clinical Indication score:</b> A score 1-10 where the radiologist will rate the appropriateness of the scan for your clinical situation.
             </p></li>
           <li><p style={{ margin: 0 }}>
-            <b>Requestor score:</b> Your starting score is 500. 
+            <b>Requestor points:</b> Your starting score is 500. 
             Accepted = <span style={{ fontWeight: "bold", color: "green" }}>+1</span>, 
             Rejected = <span style={{ fontWeight: "bold", color: "red" }}>-10</span>, 
             Delayed = <span style={{ fontWeight: "bold", color: "orange" }}>-5</span>.

@@ -186,9 +186,9 @@ export default function Radiologist(){
         <h2>Radiologist access</h2>
         <label>GMC number</label>
         <input value={radGmc} onChange={e=>setRadGmc(e.target.value.replace(/\D/g,'').slice(0,7))} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
-        <label>Access code</label>
-        <input value={accessCode} onChange={e=>setAccessCode(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="Enter code (080299)" />
-        <div className="actions"><button className="primary" disabled={unlockBusy} onClick={unlock}>{unlockBusy?'Unlocking…':'Unlock'}</button></div>
+        <label style= {{ marginTop: 10}}>Access code</label>
+        <input value={accessCode} onChange={e=>setAccessCode(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') unlock() }} placeholder="Enter code" />
+        <div className="actions"><button className="primary" disabled={unlockBusy} onClick={unlock} style= {{ marginTop: 10}}>{unlockBusy?'Unlocking…':'Unlock'}</button></div>
         {msg && <p className="error">{msg}</p>}
       </section>
     )
