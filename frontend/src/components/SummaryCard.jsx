@@ -56,8 +56,10 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
         <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>
-              Overall Rating
-              <InfoButton text="R = baseAvg + (T/1000) * (10 - baseAvg), where baseAvg is the average of clinical information and request indication ratings and T is the request points capped between 0 and 1000." />:
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span>Overall Rating</span>
+                <InfoButton text="R = baseAvg + (T/1000) * (10 - baseAvg), where baseAvg is the average of clinical information and request indication ratings and T is the request points capped between 0 and 1000." />
+              </div>
               <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong>
               {rankings?.hospital && (
                 <div style={{ fontSize: 12 }}>
@@ -71,13 +73,17 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
               )}
             </div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
-              Clinical Information rating
-              <InfoButton text="Average score (0-10) for the quality of clinical information provided on requests." />:
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span>Clinical Information rating</span>
+                <InfoButton text="Average score (0-10) for the quality of clinical information provided on requests." />
+              </div>
               <strong style={{fontSize: 20}}>{qualityAvg}</strong>
             </div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
-              Request Indication rating
-              <InfoButton text="Average score (0-10) reflecting how appropriate the request indication is." />:
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span>Request Indication rating</span>
+                <InfoButton text="Average score (0-10) reflecting how appropriate the request indication is." />
+              </div>
               <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong>
             </div>
           </div>
