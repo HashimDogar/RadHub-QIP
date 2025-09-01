@@ -388,30 +388,51 @@ app.get('/api/v1/rank/:metric', (req, res)=>{
 app.get('/api/v1/audit/raw-csv', (req, res)=>{
   const rows = db.prepare(`
     SELECT
+      r.id,
+      r.user_id,
+      r.created_at,
       strftime('%Y-%m-%d', r.created_at) AS date,
       strftime('%H:%M:%S', r.created_at) AS time,
       u.gmc AS requester_gmc,
-      r.radiologist_gmc,
-      r.scan_type,
-      COALESCE(r.request_quality_norm, r.request_quality) AS clinical_information_score,
-      COALESCE(r.request_appropriateness_norm, r.request_appropriateness) AS indication_appropriateness_score,
-      r.outcome,
-      r.reason AS feedback,
-      r.requester_score_at_request,
-      r.requester_specialty_at_request,
+      r.requester_name_at_request,
       r.requester_grade_at_request,
       r.requester_hospital_at_request,
-      r.requester_name_at_request,
-      r.points_change,
-      r.discussed_with_senior
+      r.radiologist_gmc,
+      rad.name AS radiologist_name,
+      r.scan_type,
+      r.request_quality,
+      r.request_appropriateness,
+      r.request_quality_norm,
+      r.request_appropriateness_norm,
+      r.outcome,
+      r.reason AS feedback,
+      r.requester_score_at_request
     FROM requests r
     JOIN users u ON u.id = r.user_id
-    ORDER BY r.created_at DESC
+    LEFT JOIN radiologists rad ON rad.gmc = r.radiologist_gmc
+    ORDER BY r.created_at ASC
   `).all()
-  let csv = "date,time,requester_gmc,radiologist_gmc,scan_type,clinical_information_score,indication_appropriateness_score,outcome,feedback,requester_score_at_request,requester_specialty_at_request,requester_grade_at_request,requester_hospital_at_request,requester_name_at_request,points_change,discussed_with_senior\n"
+
+  // compute running averages for requester ratings at request time
+  const stats = {}
+  for (const r of rows) {
+    const s = stats[r.user_id] || { qSum:0, qCount:0, aSum:0, aCount:0 }
+    const qVal = r.request_quality_norm ?? r.request_quality
+    if (qVal != null) { s.qSum += qVal; s.qCount += 1 }
+    const aVal = r.request_appropriateness_norm ?? r.request_appropriateness
+    if (aVal != null) { s.aSum += aVal; s.aCount += 1 }
+    stats[r.user_id] = s
+    r.requester_avg_quality_at_request = s.qCount ? s.qSum / s.qCount : null
+    r.requester_avg_appropriateness_at_request = s.aCount ? s.aSum / s.aCount : null
+  }
+
+  // output in reverse chronological order
+  rows.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))
+
+  let csv = "date,time,requester_gmc,requester_name_at_request,requester_grade_at_request,requester_hospital_at_request,radiologist_gmc,radiologist_name,scan_type,request_quality,request_appropriateness,request_quality_norm,request_appropriateness_norm,outcome,feedback,requester_score_at_request,requester_avg_quality_at_request,requester_avg_appropriateness_at_request\n"
   for(const r of rows){
     const safeFeedback = (r.feedback||'').replaceAll('"','""')
-    csv += `${r.date},${r.time},${r.requester_gmc||''},${r.radiologist_gmc||''},${r.scan_type||''},${r.clinical_information_score||''},${r.indication_appropriateness_score||''},${r.outcome||''},"${safeFeedback}",${r.requester_score_at_request||''},${r.requester_specialty_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.requester_name_at_request||''},${r.points_change||''},${r.discussed_with_senior}\n`
+    csv += `${r.date},${r.time},${r.requester_gmc||''},${r.requester_name_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.radiologist_gmc||''},${r.radiologist_name||''},${r.scan_type||''},${r.request_quality||''},${r.request_appropriateness||''},${r.request_quality_norm||''},${r.request_appropriateness_norm||''},${r.outcome||''},"${safeFeedback}",${r.requester_score_at_request||''},${r.requester_avg_quality_at_request||''},${r.requester_avg_appropriateness_at_request||''}\n`
   }
   res.header('Content-Type','text/csv')
   res.attachment('audit_raw.csv')
