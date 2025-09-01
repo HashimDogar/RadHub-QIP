@@ -455,19 +455,49 @@ app.get('/api/v1/audit/trends', (req, res) => {
   const defaultLimit = interval === 'week' ? 5 : interval === 'month' ? 12 : 30
   const limit = parseInt(req.query.limit, 10) || defaultLimit
   const page = Math.max(parseInt(req.query.page, 10) || 0, 0)
+  const maxPeriods = limit * (page + 1)
   const offset = page * limit
+  const base = interval === 'week'
+    ? "date('now','weekday 1','-7 days')"
+    : interval === 'month'
+    ? "date('now','start of month')"
+    : "date('now')"
+  const step = interval === 'week' ? '-7 day' : interval === 'month' ? '-1 month' : '-1 day'
   const rows = db
-    .prepare(
-      `SELECT strftime('${fmt}', created_at) AS period, COUNT(*) AS requests, AVG(${qCol}) AS avg_quality, AVG(${aCol}) AS avg_appropriateness FROM requests GROUP BY period ORDER BY period DESC LIMIT ? OFFSET ?`
+    .prepare(`
+      WITH RECURSIVE periods(idx, dt) AS (
+        SELECT 0, ${base}
+        UNION ALL
+        SELECT idx+1, date(dt, '${step}')
+        FROM periods
+        WHERE idx+1 < ?
+      )
+      SELECT p.period AS period,
+             COALESCE(r.requests, 0) AS requests,
+             r.avg_quality,
+             r.avg_appropriateness
+      FROM (
+        SELECT idx, strftime('${fmt}', dt) AS period
+        FROM periods
+        WHERE idx >= ?
+        ORDER BY dt
+      ) p
+      LEFT JOIN (
+        SELECT strftime('${fmt}', created_at) AS period,
+               COUNT(*) AS requests,
+               AVG(${qCol}) AS avg_quality,
+               AVG(${aCol}) AS avg_appropriateness
+        FROM requests
+        GROUP BY period
+      ) r ON r.period = p.period
+      ORDER BY p.period`
     )
-    .all(limit, offset)
-    .reverse()
-  const totalPeriods = db
-    .prepare(
-      `SELECT COUNT(*) AS count FROM (SELECT strftime('${fmt}', created_at) AS period FROM requests GROUP BY period)`
-    )
-    .get().count
-  const hasMore = (page + 1) * limit < totalPeriods
+    .all(maxPeriods, offset)
+
+  const earliest = db
+    .prepare(`SELECT strftime('${fmt}', MIN(created_at)) AS period FROM requests`)
+    .get().period
+  const hasMore = earliest != null && earliest < rows[0].period
   res.json({ rows, hasMore })
 })
 
