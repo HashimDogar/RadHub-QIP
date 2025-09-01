@@ -66,9 +66,9 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
                   Hospital rank: {rankings.hospital.rank} of {rankings.hospital.total}
                 </div>
               )}
-              {rankings?.specialty && (
+              {rankings?.department && (
                 <div style={{ fontSize: 12 }}>
-                  Specialty rank: {rankings.specialty.rank} of {rankings.specialty.total}
+                  Department rank: {rankings.department.rank} of {rankings.department.total}
                 </div>
               )}
             </div>

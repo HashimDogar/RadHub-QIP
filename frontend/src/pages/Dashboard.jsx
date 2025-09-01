@@ -37,13 +37,13 @@ export default function Dashboard(){
         setMsg('')
         setRecognised(true)
         const u = res.user || {}
-        const [rHosp, rSpec] = await Promise.all([
+        const [rHosp, rDept] = await Promise.all([
           u.hospital ? getRank('score', { hospital: u.hospital, gmc: u.gmc }) : null,
-          u.specialty ? getRank('score', { specialty: u.specialty, gmc: u.gmc }) : null
+          (u.hospital && u.specialty) ? getRank('score', { hospital: u.hospital, specialty: u.specialty, gmc: u.gmc }) : null
         ])
         setRankings({
           hospital: rHosp && rHosp.rank_index >= 0 ? { rank: rHosp.rank_index + 1, total: rHosp.total } : null,
-          specialty: rSpec && rSpec.rank_index >= 0 ? { rank: rSpec.rank_index + 1, total: rSpec.total } : null
+          department: rDept && rDept.rank_index >= 0 ? { rank: rDept.rank_index + 1, total: rDept.total } : null
         })
       } else {
         setData(null)
