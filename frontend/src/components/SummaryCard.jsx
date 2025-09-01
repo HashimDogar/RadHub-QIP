@@ -51,14 +51,14 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
 
   return (
     <>
-      <section className="card" style={style}>
+      <section className="card summary-card" style={style}>
         <h3>Summary</h3>
         <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span>Overall Rating</span>
-                <InfoButton text="R = baseAvg + (T/1000) * (10 - baseAvg), where baseAvg is the average of clinical information and request indication ratings and T is the request points capped between 0 and 1000." />
+                <InfoButton text="Combination of your Clinical indication score, Clinical information score, and Requestor score" />
               </div>
               <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong>
               {rankings?.hospital && (
@@ -90,7 +90,7 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
           <div className="summary-linegraph">
           <LineGraph
             series={[reqScoreSeries, qualitySeries, apprSeries]}
-            labels={["Overall score", "Quality rating", "Appt rating"]}
+            labels={["Overall", "Info", "Indication"]}
           />
           </div>
           <div  className="summary-chart" style={{ flex:'0 0 auto', margin: 20 }}>

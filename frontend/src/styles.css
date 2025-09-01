@@ -22,6 +22,7 @@ header p { margin: 0; color: var(--muted); }
 .grid { display: grid; gap: 16px; }
 .card { background: var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; overflow: hidden; }
 .card h2, .card h3 { margin: 0 0 10px; line-height: 1.2; }
+.summary-card { overflow: visible; }
 label { display:block; margin-bottom: 4px; color: var(--muted); font-weight: 500; }
 input, select, textarea, button { background: var(--card); color: var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font: inherit; }
 input, select, textarea { width: 100%; min-width: 220px; }
