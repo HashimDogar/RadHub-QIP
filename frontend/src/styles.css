@@ -27,6 +27,7 @@ label { display:block; margin-bottom: 4px; color: var(--muted); font-weight: 500
 input, select, textarea, button { background: var(--card); color: var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font: inherit; }
 input, select, textarea { width: 100%; min-width: 220px; }
 textarea { resize: vertical; }
+button { cursor: pointer; }
 button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
 button[disabled] { opacity: 0.6; cursor: not-allowed; }
 .row { display:flex; gap:12px; flex-wrap: wrap; align-items: flex-start; }

@@ -99,7 +99,7 @@ export default function Leaderboard(){
             <input value={gmc} onChange={e=>setGmc(e.target.value.replace(/\D/g,'').slice(0,7))} placeholder="7-digit GMC" maxLength={7} inputMode="numeric" />
           </div>
           <div className="actions" style={{ alignSelf:'end' }}>
-            <button className="primary" type="submit">View</button>
+            <button className="primary" type="submit" disabled={gmc.length !== 7}>View</button>
           </div>
         </form>
       </section>
