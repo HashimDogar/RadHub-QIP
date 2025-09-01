@@ -95,8 +95,8 @@ export default function RecentRequestHistory({ requests = [] }) {
                 <td title={r.reason?.trim() ? r.reason : undefined}>
                   {r.reason?.trim() ? r.reason : '—'}
                 </td>
-                <td>{formatSigFig(r.request_appropriateness)}</td>
-                <td>{formatSigFig(r.request_quality)}</td>
+                <td style={{ textAlign:'center' }}>{formatSigFig(r.request_appropriateness)}</td>
+                <td style={{ textAlign:'center' }}>{formatSigFig(r.request_quality)}</td>
               </tr>
             ))}
           </tbody>
