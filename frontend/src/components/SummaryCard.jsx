@@ -4,7 +4,7 @@ import RecentRequestHistory from './RecentRequestHistory'
 import LineGraph from './LineGraph'
 import InfoButton from './InfoButton'
 
-export default function SummaryCard({ stats, score, requests = [], showOverrides=false, showLegend=true, style }) {
+export default function SummaryCard({ stats, score, requests = [], showOverrides=false, showLegend=true, style, rankings={} }) {
   if (!stats) return null
   const accepted = (stats.counts?.accepted || 0) + (stats.counts?.override || 0)
   const delayed = stats.counts?.delayed || 0
@@ -59,6 +59,16 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
               Overall Rating
               <InfoButton text="R = baseAvg + (T/1000) * (10 - baseAvg), where baseAvg is the average of clinical information and request indication ratings and T is the request points capped between 0 and 1000." />:
               <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong>
+              {rankings?.hospital && (
+                <div style={{ fontSize: 12 }}>
+                  Hospital rank: {rankings.hospital.rank} of {rankings.hospital.total}
+                </div>
+              )}
+              {rankings?.specialty && (
+                <div style={{ fontSize: 12 }}>
+                  Specialty rank: {rankings.specialty.rank} of {rankings.specialty.total}
+                </div>
+              )}
             </div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
               Clinical Information rating

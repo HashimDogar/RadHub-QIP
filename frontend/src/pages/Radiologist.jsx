@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser, getRadHistory, radLogout } from '../lib/api'
+import { getUser, radUnlock, radSession, gmcLookup, vet, updateUser, getRadHistory, radLogout, getRank } from '../lib/api'
 import SummaryCard from '../components/SummaryCard'
 
 const GRADE_OPTIONS = ['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other']
@@ -22,6 +22,7 @@ export default function Radiologist(){
   const [reqQuality, setReqQuality] = useState(0)
 
   const [snapshot, setSnapshot] = useState(null)
+  const [snapshotRankings, setSnapshotRankings] = useState({})
   const [showNewUserProfile, setShowNewUserProfile] = useState(false)
   const [newSpecialty, setNewSpecialty] = useState('')
   const [newGrade, setNewGrade] = useState('')
@@ -99,10 +100,33 @@ export default function Radiologist(){
   }
 
   async function loadSnapshot(v){
-    if (!isValidGmc(v)){ setSnapshot(null); setShowNewUserProfile(false); return }
+    if (!isValidGmc(v)){
+      setSnapshot(null)
+      setShowNewUserProfile(false)
+      setSnapshotRankings({})
+      return
+    }
     const res = await getUser(v.trim())
-    if (res && !res.error){ setSnapshot(res); setShowNewUserProfile(false) }
-    else { setSnapshot(null); setShowNewUserProfile(true); try{ const lk=await gmcLookup(v.trim()); setResolvedName(lk?.name||'') }catch{}; setNewSpecialty(''); setNewGrade(''); setNewHospital('') }
+    if (res && !res.error){
+      setSnapshot(res)
+      setShowNewUserProfile(false)
+      const u = res.user || {}
+      const [rHosp, rSpec] = await Promise.all([
+        u.hospital ? getRank('score', { hospital: u.hospital, gmc: u.gmc }) : null,
+        u.specialty ? getRank('score', { specialty: u.specialty, gmc: u.gmc }) : null
+      ])
+      setSnapshotRankings({
+        hospital: rHosp && rHosp.rank_index >= 0 ? { rank: rHosp.rank_index + 1, total: rHosp.total } : null,
+        specialty: rSpec && rSpec.rank_index >= 0 ? { rank: rSpec.rank_index + 1, total: rSpec.total } : null
+      })
+    }
+    else {
+      setSnapshot(null)
+      setShowNewUserProfile(true)
+      setSnapshotRankings({})
+      try{ const lk=await gmcLookup(v.trim()); setResolvedName(lk?.name||'') }catch{}
+      setNewSpecialty(''); setNewGrade(''); setNewHospital('')
+    }
   }
 
   const canSave = isValidGmc(gmc) && isValidGmc(radGmc) && scanType && (scanType !== 'Other' || otherScanType.trim()) && selectedOutcome && reqAppropriateness && reqQuality && (!showNewUserProfile || (newSpecialty && newGrade && newHospital))
@@ -115,7 +139,7 @@ export default function Radiologist(){
     if (!r || r.error){ setMsg(r?.error||'Save failed'); return }
     setSaved('Saved. Fields cleared.'); setTimeout(()=>setSaved(''),1500)
     // clear
-    setGmc(''); setScanType(''); setOtherScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
+    setGmc(''); setScanType(''); setOtherScanType(''); setSelectedOutcome(''); setReason(''); setSnapshot(null); setSnapshotRankings({}); setShowNewUserProfile(false); setNewSpecialty(''); setNewGrade(''); setNewHospital(''); setResolvedName(''); setReqAppropriateness(0); setReqQuality(0)
     if (showHistory){
       const h = await getRadHistory()
       if (h && !h.error) setHistory(h.history || [])
@@ -127,8 +151,9 @@ export default function Radiologist(){
     if (!isValidGmc(gmc) || !newSpecialty || !newGrade || !newHospital){ setMsg('Complete GMC, specialty, grade, hospital'); return }
     const r = await updateUser(gmc.trim(), { name: resolvedName || undefined, specialty: newSpecialty, grade: newGrade, hospital: newHospital })
     if (r && r.ok){
-      const res = await getUser(gmc.trim())
-      if (res && !res.error){ setSnapshot(res); setShowNewUserProfile(false); setMsg('User created. You can now save requests normally.') }
+      await loadSnapshot(gmc.trim())
+      setShowNewUserProfile(false)
+      setMsg('User created. You can now save requests normally.')
     } else {
       setMsg(r?.error || 'Failed to create user')
     }
@@ -152,6 +177,7 @@ export default function Radiologist(){
     setShowHistory(false)
     setGmc('')
     setSnapshot(null)
+    setSnapshotRankings({})
   }
 
   if (!codeOk){
@@ -351,6 +377,7 @@ export default function Radiologist(){
             requests={snapshot.requests}
             showLegend
             style={{ marginTop: 12 }}
+            rankings={snapshotRankings}
           />
         )}
       </section>

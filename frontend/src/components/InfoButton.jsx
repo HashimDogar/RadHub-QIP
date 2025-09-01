@@ -29,11 +29,25 @@ export default function InfoButton({ text }) {
           background: 'none',
           border: 'none',
           padding: 0,
-          fontSize: '0.9em',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
         aria-label="Information"
       >
-        ℹ️
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <circle cx="8" cy="8" r="7" />
+          <line x1="8" y1="6" x2="8" y2="10" />
+          <circle cx="8" cy="4" r="1" fill="currentColor" stroke="none" />
+        </svg>
       </button>
       {open && (
         <div

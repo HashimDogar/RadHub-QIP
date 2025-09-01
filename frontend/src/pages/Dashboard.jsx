@@ -22,10 +22,7 @@ export default function Dashboard(){
   const [editGrade, setEditGrade] = useState('')
   const [editHosp, setEditHosp] = useState('')
 
-  const [rankMetric, setRankMetric] = useState('score')
-  const [rankBy, setRankBy] = useState('hospital')
-  const [rankValue, setRankValue] = useState('')
-  const [rankData, setRankData] = useState(null)
+  const [rankings, setRankings] = useState({})
 
   const isGmcValid = /^\d{7}$/.test(gmc)
   const debounceRef = useRef()
@@ -35,8 +32,25 @@ export default function Dashboard(){
     setBusy(true)
     try{
       const res = await getUser(gmc.trim())
-      if (res && !res.error){ setData(res); setMsg(''); setRecognised(true) }
-      else { setData(null); setRecognised(false); setMsg(res?.error || 'User not recognised') }
+      if (res && !res.error){
+        setData(res)
+        setMsg('')
+        setRecognised(true)
+        const u = res.user || {}
+        const [rHosp, rSpec] = await Promise.all([
+          u.hospital ? getRank('score', { hospital: u.hospital, gmc: u.gmc }) : null,
+          u.specialty ? getRank('score', { specialty: u.specialty, gmc: u.gmc }) : null
+        ])
+        setRankings({
+          hospital: rHosp && rHosp.rank_index >= 0 ? { rank: rHosp.rank_index + 1, total: rHosp.total } : null,
+          specialty: rSpec && rSpec.rank_index >= 0 ? { rank: rSpec.rank_index + 1, total: rSpec.total } : null
+        })
+      } else {
+        setData(null)
+        setRecognised(false)
+        setMsg(res?.error || 'User not recognised')
+        setRankings({})
+      }
     } finally { setBusy(false) }
   }
 
@@ -49,7 +63,7 @@ export default function Dashboard(){
         await fetchUser()
       }, 250)
     } else {
-      setRecognised(null); setData(null)
+      setRecognised(null); setData(null); setRankings({})
     }
     return () => clearTimeout(debounceRef.current)
   }, [gmc])
@@ -130,7 +144,7 @@ export default function Dashboard(){
   ) : null
 
   const summaryCard = recognised ? (
-    <SummaryCard stats={data.stats} score={data.user.score} requests={data.requests} showLegend />
+    <SummaryCard stats={data.stats} score={data.user.score} requests={data.requests} showLegend rankings={rankings} />
   ) : null
 
   return (
