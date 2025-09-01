@@ -18,6 +18,8 @@ export default function Audit(){
   const [trendData, setTrendData] = useState([])
   const [trendPage, setTrendPage] = useState(0)
   const [trendHasPrev, setTrendHasPrev] = useState(false)
+  const [userLimit, setUserLimit] = useState('15')
+  const [radLimit, setRadLimit] = useState('15')
   const canvasRef = useRef(null)
   const chartRef = useRef(null)
 
@@ -233,7 +235,17 @@ export default function Audit(){
       </div>
 
       <div style={{ marginTop:'2rem' }}>
-        <h3>Registered Users</h3>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <h3>Registered Users</h3>
+          <div>
+            <label style={{ marginRight:8 }}>Show</label>
+            <select value={userLimit} onChange={e=>setUserLimit(e.target.value)}>
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
         <div style={{ overflowX:'auto' }}>
           <table className="table">
             <thead>
@@ -254,7 +266,7 @@ export default function Audit(){
               </tr>
             </thead>
             <tbody>
-              {users.map(u => {
+              {(userLimit === 'all' ? users : users.slice(0, parseInt(userLimit))).map(u => {
                 const qn = u.avg_quality || 0
                 const an = u.avg_appropriateness || 0
                 const qAvg = qn.toFixed(1)
@@ -289,7 +301,17 @@ export default function Audit(){
       </div>
 
       <div style={{ marginTop:'2rem' }}>
-        <h3>Registered Radiologists</h3>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <h3>Registered Radiologists</h3>
+          <div>
+            <label style={{ marginRight:8 }}>Show</label>
+            <select value={radLimit} onChange={e=>setRadLimit(e.target.value)}>
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
         <div style={{ overflowX:'auto' }}>
           <table className="table">
             <thead>
@@ -306,7 +328,7 @@ export default function Audit(){
               </tr>
             </thead>
             <tbody>
-              {rads.map(r => (
+              {(radLimit === 'all' ? rads : rads.slice(0, parseInt(radLimit))).map(r => (
                 <tr key={r.gmc}>
                   <td style={{ textAlign: 'center' }}>{r.gmc}</td>
                   <td>{r.name || '-'}</td>
