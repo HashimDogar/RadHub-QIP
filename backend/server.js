@@ -444,4 +444,20 @@ app.get('/api/v1/audit/raw-csv', (req, res)=>{
   res.send(csv)
 })
 
+app.get('/api/v1/audit/trends', (req, res) => {
+  const interval = ['day', 'week', 'month'].includes(req.query.interval)
+    ? req.query.interval
+    : 'day'
+  const mode = req.query.mode === 'raw' ? 'raw' : 'norm'
+  const fmt = interval === 'week' ? '%Y-%W' : interval === 'month' ? '%Y-%m' : '%Y-%m-%d'
+  const qCol = mode === 'raw' ? 'request_quality' : 'request_quality_norm'
+  const aCol = mode === 'raw' ? 'request_appropriateness' : 'request_appropriateness_norm'
+  const rows = db
+    .prepare(
+      `SELECT strftime('${fmt}', created_at) AS period, COUNT(*) AS requests, AVG(${qCol}) AS avg_quality, AVG(${aCol}) AS avg_appropriateness FROM requests GROUP BY period ORDER BY period ASC`
+    )
+    .all()
+  res.json({ rows })
+})
+
 app.listen(PORT, ()=>console.log(`Backend running on http://localhost:${PORT}; DB=${DB_FILE}`))

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { downloadRawCsv, getUsers, getRadiologists, updateUser, deleteUser, getUser } from '../lib/api'
+import React, { useState, useEffect, useRef } from 'react'
+import Chart from 'chart.js/auto'
+import { downloadRawCsv, getUsers, getRadiologists, updateUser, deleteUser, getUser, getAuditTrends } from '../lib/api'
 
 export default function Audit(){
   const [pin, setPin] = useState('')
@@ -12,10 +13,17 @@ export default function Audit(){
   const [updSpecialty, setUpdSpecialty] = useState('')
   const [updGrade, setUpdGrade] = useState('')
   const [newScore, setNewScore] = useState('')
+  const [trendInterval, setTrendInterval] = useState('week')
+  const [trendMode, setTrendMode] = useState('norm')
+  const [trendData, setTrendData] = useState([])
+  const canvasRef = useRef(null)
+  const chartRef = useRef(null)
 
   function unlock(){ if (pin.trim() === '221199') setOk(true); else alert('Incorrect PIN') }
 
-  useEffect(()=>{ if(ok){ loadUsers(); loadRads() } }, [ok])
+  useEffect(()=>{ if(ok){ loadUsers(); loadRads(); loadTrends() } }, [ok])
+
+  useEffect(()=>{ if(ok) loadTrends() }, [trendInterval, trendMode])
 
   useEffect(()=>{
     const g = updGmc.trim()
@@ -60,6 +68,11 @@ export default function Audit(){
     setRads(r.radiologists || [])
   }
 
+  async function loadTrends(){
+    const r = await getAuditTrends(trendInterval, trendMode)
+    setTrendData(r.rows || [])
+  }
+
   async function doUpdate(){
     const g = updGmc.trim()
     if(!/^\d{7}$/.test(g)){ alert('Enter valid GMC'); return }
@@ -99,6 +112,68 @@ export default function Audit(){
     loadRads()
   }
 
+  useEffect(() => {
+    if (!canvasRef.current) return
+    if (chartRef.current) chartRef.current.destroy()
+    const labels = trendData.map(r => r.period)
+    const quality = trendData.map(r => r.avg_quality)
+    const appropriateness = trendData.map(r => r.avg_appropriateness)
+    const counts = trendData.map(r => r.requests)
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            type: 'line',
+            label: 'Avg clinical info',
+            data: quality,
+            borderColor: '#4bc0c0',
+            backgroundColor: '#4bc0c0',
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'Avg indication',
+            data: appropriateness,
+            borderColor: '#9966ff',
+            backgroundColor: '#9966ff',
+            yAxisID: 'y'
+          },
+          {
+            type: 'bar',
+            label: '# Requests',
+            data: counts,
+            backgroundColor: 'rgba(255,99,132,0.3)',
+            borderColor: '#ff6384',
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        stacked: false,
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            max: 10,
+            title: { display: true, text: 'Average score' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            beginAtZero: true,
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: 'Requests' }
+          }
+        }
+      }
+    })
+  }, [trendData])
+
   if (!ok){
     return (
       <section className="card">
@@ -123,6 +198,30 @@ export default function Audit(){
       <h2>Audit exports</h2>
       <p className="muted">Download all raw request data as a single CSV (includes role snapshots at request time).</p>
       <a className="chip" href={url} download>Download raw CSV</a>
+
+      <div style={{ marginTop:'2rem' }}>
+        <h3>Request and rating trends</h3>
+        <div className="row">
+          <div style={{ minWidth:150 }}>
+            <label>Score type</label>
+            <select value={trendMode} onChange={e=>setTrendMode(e.target.value)}>
+              <option value="raw">Raw</option>
+              <option value="norm">Normalised</option>
+            </select>
+          </div>
+          <div style={{ minWidth:150 }}>
+            <label>Interval</label>
+            <select value={trendInterval} onChange={e=>setTrendInterval(e.target.value)}>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ marginTop:'1rem' }}>
+          <canvas ref={canvasRef} style={{ maxHeight:400 }} />
+        </div>
+      </div>
 
       <div style={{ marginTop:'2rem' }}>
         <h3>Registered Users</h3>
