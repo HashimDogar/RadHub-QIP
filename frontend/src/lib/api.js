@@ -87,8 +87,8 @@ export function downloadRawCsv() {
   return `/api/v1/audit/raw-csv`;
 }
 
-export async function getAuditTrends(interval = 'day', mode = 'norm') {
-  const q = new URLSearchParams({ interval, mode }).toString();
+export async function getAuditTrends(interval = 'day', mode = 'norm', page = 0) {
+  const q = new URLSearchParams({ interval, mode, page }).toString();
   const r = await fetch(`/api/v1/audit/trends?${q}`, { credentials: 'include' });
   return r.json();
 }

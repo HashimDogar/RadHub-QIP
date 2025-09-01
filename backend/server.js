@@ -452,12 +452,23 @@ app.get('/api/v1/audit/trends', (req, res) => {
   const fmt = interval === 'week' ? '%Y-%W' : interval === 'month' ? '%Y-%m' : '%Y-%m-%d'
   const qCol = mode === 'raw' ? 'request_quality' : 'request_quality_norm'
   const aCol = mode === 'raw' ? 'request_appropriateness' : 'request_appropriateness_norm'
+  const defaultLimit = interval === 'week' ? 3 : interval === 'month' ? 2 : 4
+  const limit = parseInt(req.query.limit, 10) || defaultLimit
+  const page = Math.max(parseInt(req.query.page, 10) || 0, 0)
+  const offset = page * limit
   const rows = db
     .prepare(
-      `SELECT strftime('${fmt}', created_at) AS period, COUNT(*) AS requests, AVG(${qCol}) AS avg_quality, AVG(${aCol}) AS avg_appropriateness FROM requests GROUP BY period ORDER BY period ASC`
+      `SELECT strftime('${fmt}', created_at) AS period, COUNT(*) AS requests, AVG(${qCol}) AS avg_quality, AVG(${aCol}) AS avg_appropriateness FROM requests GROUP BY period ORDER BY period DESC LIMIT ? OFFSET ?`
     )
-    .all()
-  res.json({ rows })
+    .all(limit, offset)
+    .reverse()
+  const totalPeriods = db
+    .prepare(
+      `SELECT COUNT(*) AS count FROM (SELECT strftime('${fmt}', created_at) AS period FROM requests GROUP BY period)`
+    )
+    .get().count
+  const hasMore = (page + 1) * limit < totalPeriods
+  res.json({ rows, hasMore })
 })
 
 app.listen(PORT, ()=>console.log(`Backend running on http://localhost:${PORT}; DB=${DB_FILE}`))

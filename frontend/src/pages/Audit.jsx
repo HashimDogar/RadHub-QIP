@@ -16,6 +16,8 @@ export default function Audit(){
   const [trendInterval, setTrendInterval] = useState('week')
   const [trendMode, setTrendMode] = useState('norm')
   const [trendData, setTrendData] = useState([])
+  const [trendPage, setTrendPage] = useState(0)
+  const [trendHasPrev, setTrendHasPrev] = useState(false)
   const canvasRef = useRef(null)
   const chartRef = useRef(null)
 
@@ -23,7 +25,7 @@ export default function Audit(){
 
   useEffect(()=>{ if(ok){ loadUsers(); loadRads(); loadTrends() } }, [ok])
 
-  useEffect(()=>{ if(ok) loadTrends() }, [trendInterval, trendMode])
+  useEffect(()=>{ if(ok) loadTrends() }, [trendInterval, trendMode, trendPage])
 
   useEffect(()=>{
     const g = updGmc.trim()
@@ -69,8 +71,9 @@ export default function Audit(){
   }
 
   async function loadTrends(){
-    const r = await getAuditTrends(trendInterval, trendMode)
+    const r = await getAuditTrends(trendInterval, trendMode, trendPage)
     setTrendData(r.rows || [])
+    setTrendHasPrev(r.hasMore)
   }
 
   async function doUpdate(){
@@ -204,18 +207,22 @@ export default function Audit(){
         <div className="row">
           <div style={{ minWidth:150 }}>
             <label>Score type</label>
-            <select value={trendMode} onChange={e=>setTrendMode(e.target.value)}>
+            <select value={trendMode} onChange={e=>{ setTrendMode(e.target.value); setTrendPage(0) }}>
               <option value="raw">Raw</option>
               <option value="norm">Normalised</option>
             </select>
           </div>
           <div style={{ minWidth:150 }}>
             <label>Interval</label>
-            <select value={trendInterval} onChange={e=>setTrendInterval(e.target.value)}>
+            <select value={trendInterval} onChange={e=>{ setTrendInterval(e.target.value); setTrendPage(0) }}>
               <option value="day">Day</option>
               <option value="week">Week</option>
               <option value="month">Month</option>
             </select>
+          </div>
+          <div style={{ display:'flex', gap:'8px', alignSelf:'flex-end', marginLeft:'auto' }}>
+            <button onClick={()=>setTrendPage(p=>p+1)} disabled={!trendHasPrev}>Prev</button>
+            <button onClick={()=>setTrendPage(p=>Math.max(0,p-1))} disabled={trendPage===0}>Next</button>
           </div>
         </div>
         <div style={{ marginTop:'1rem' }}>
