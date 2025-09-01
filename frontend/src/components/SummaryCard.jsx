@@ -2,6 +2,7 @@ import React from 'react'
 import PieChart, { PIE_COLORS } from './PieChart'
 import RecentRequestHistory from './RecentRequestHistory'
 import LineGraph from './LineGraph'
+import InfoButton from './InfoButton'
 
 export default function SummaryCard({ stats, score, requests = [], showOverrides=false, showLegend=true, style }) {
   if (!stats) return null
@@ -54,9 +55,21 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
         <h3>Summary</h3>
         <div className="summary-container">
           <div className="summary-scores" style={{display:"flex", flexDirection: "column" ,justifyContent: "flex-end", margin: 20}}>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>Overall Rating: <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Clinical Information rating: <strong style={{fontSize: 20}}>{qualityAvg}</strong></div>
-            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>Request Indication rating: <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong></div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>
+              Overall Rating
+              <InfoButton text="R = baseAvg + (T/1000) * (10 - baseAvg), where baseAvg is the average of clinical information and request indication ratings and T is the request points capped between 0 and 1000." />:
+              <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong>
+            </div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
+              Clinical Information rating
+              <InfoButton text="Average score (0-10) for the quality of clinical information provided on requests." />:
+              <strong style={{fontSize: 20}}>{qualityAvg}</strong>
+            </div>
+            <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
+              Request Indication rating
+              <InfoButton text="Average score (0-10) reflecting how appropriate the request indication is." />:
+              <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong>
+            </div>
           </div>
           <div className="summary-linegraph">
           <LineGraph

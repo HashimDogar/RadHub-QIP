@@ -289,7 +289,7 @@ app.post('/api/v1/vet', async (req, res) => {
     if (!scan_type || !outcome) return res.status(400).json({ error:'Missing scan_type or outcome' })
     if (!['accepted','delayed','rejected','info_needed'].includes(outcome)) return res.status(400).json({ error:'Invalid outcome' })
 
-    const pts = outcome==='accepted' ? 5 : outcome==='delayed' || outcome==='info_needed' ? -5 : -10
+    const pts = outcome==='accepted' ? 1 : outcome==='info_needed' ? -5 : -10
     const rq = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_quality)
     const ra = (n=>{ n=parseInt(n); return n>=1&&n<=10?n:null })(request_appropriateness)
     const rqNorm = withinRaterNorm(radiologist_gmc, 'request_quality', rq)
@@ -424,15 +424,20 @@ app.get('/api/v1/audit/raw-csv', (req, res)=>{
     stats[r.user_id] = s
     r.requester_avg_quality_at_request = s.qCount ? s.qSum / s.qCount : null
     r.requester_avg_appropriateness_at_request = s.aCount ? s.aSum / s.aCount : null
+    const qAvg = r.requester_avg_quality_at_request ?? 0
+    const aAvg = r.requester_avg_appropriateness_at_request ?? 0
+    const baseAvg = (qAvg + aAvg) / 2
+    const cappedScore = Math.max(0, Math.min(r.requester_score_at_request || 0, 1000))
+    r.requester_overall_rating = Math.max(0, Math.min(10, baseAvg + (cappedScore / 1000) * (10 - baseAvg)))
   }
 
   // output in reverse chronological order
   rows.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))
 
-  let csv = "date,time,requester_gmc,requester_name_at_request,requester_grade_at_request,requester_hospital_at_request,radiologist_gmc,radiologist_name,scan_type,request_quality,request_appropriateness,request_quality_norm,request_appropriateness_norm,outcome,feedback,requester_score_at_request,requester_avg_quality_at_request,requester_avg_appropriateness_at_request\n"
+  let csv = "date,time,requester_gmc,requester_name_at_request,requester_grade_at_request,requester_hospital_at_request,radiologist_gmc,radiologist_name,scan_type,request_quality,request_appropriateness,request_quality_norm,request_appropriateness_norm,outcome,feedback,requester_score_at_request,requester_avg_quality_at_request,requester_avg_appropriateness_at_request,requester_overall_rating\n"
   for(const r of rows){
     const safeFeedback = (r.feedback||'').replaceAll('"','""')
-    csv += `${r.date},${r.time},${r.requester_gmc||''},${r.requester_name_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.radiologist_gmc||''},${r.radiologist_name||''},${r.scan_type||''},${r.request_quality||''},${r.request_appropriateness||''},${r.request_quality_norm||''},${r.request_appropriateness_norm||''},${r.outcome||''},"${safeFeedback}",${r.requester_score_at_request||''},${r.requester_avg_quality_at_request||''},${r.requester_avg_appropriateness_at_request||''}\n`
+    csv += `${r.date},${r.time},${r.requester_gmc||''},${r.requester_name_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.radiologist_gmc||''},${r.radiologist_name||''},${r.scan_type||''},${r.request_quality||''},${r.request_appropriateness||''},${r.request_quality_norm||''},${r.request_appropriateness_norm||''},${r.outcome||''},"${safeFeedback}",${r.requester_score_at_request||''},${r.requester_avg_quality_at_request||''},${r.requester_avg_appropriateness_at_request||''},${r.requester_overall_rating||''}\n`
   }
   res.header('Content-Type','text/csv')
   res.attachment('audit_raw.csv')
