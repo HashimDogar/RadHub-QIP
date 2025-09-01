@@ -317,7 +317,7 @@ export default function Radiologist(){
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label>Indication: Please rate how appropriate the indication was for this request.</label>
+          <label>Clinical Indication: Please rate how appropriate the indication was for this request.</label>
           <div className="rating">
             <input
               type="range"
@@ -331,7 +331,7 @@ export default function Radiologist(){
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label>Clinical information: Please rate the quality of the clinical information provided.</label>
+          <label>Clinical Information: Please rate the quality of the clinical information provided.</label>
           <div className="rating">
             <input
               type="range"
