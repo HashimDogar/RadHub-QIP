@@ -452,7 +452,7 @@ app.get('/api/v1/audit/trends', (req, res) => {
   const fmt = interval === 'week' ? '%Y-%W' : interval === 'month' ? '%Y-%m' : '%Y-%m-%d'
   const qCol = mode === 'raw' ? 'request_quality' : 'request_quality_norm'
   const aCol = mode === 'raw' ? 'request_appropriateness' : 'request_appropriateness_norm'
-  const defaultLimit = interval === 'week' ? 3 : interval === 'month' ? 2 : 4
+  const defaultLimit = interval === 'week' ? 5 : interval === 'month' ? 12 : 30
   const limit = parseInt(req.query.limit, 10) || defaultLimit
   const page = Math.max(parseInt(req.query.page, 10) || 0, 0)
   const offset = page * limit

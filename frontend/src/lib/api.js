@@ -88,7 +88,9 @@ export function downloadRawCsv() {
 }
 
 export async function getAuditTrends(interval = 'day', mode = 'norm', page = 0) {
-  const q = new URLSearchParams({ interval, mode, page }).toString();
-  const r = await fetch(`/api/v1/audit/trends?${q}`, { credentials: 'include' });
-  return r.json();
+  const limits = { day: 30, week: 5, month: 12 }
+  const limit = limits[interval] || 30
+  const q = new URLSearchParams({ interval, mode, page, limit }).toString()
+  const r = await fetch(`/api/v1/audit/trends?${q}`, { credentials: 'include' })
+  return r.json()
 }
