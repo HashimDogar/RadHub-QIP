@@ -11,7 +11,7 @@ export default function Modules({ visible }){
   return (
     <section className="card">
       <h3>eLearning modules</h3>
-      <p className="muted">Short MCQs aligned with iRefer to reinforce appropriate OOH CT requesting. Completing a module awards +100 points.</p>
+      <p className="muted">Short MCQs aligned with iRefer to reinforce appropriate OOH CT requesting. Completing a module awards +50 points.</p>
       <div className="kpis">
         {MODULES.map(m=>(
           <div className="kpi" key={m.id}>
