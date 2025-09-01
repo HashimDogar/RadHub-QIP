@@ -83,6 +83,6 @@ export async function getRadHistory(limit = 15) {
   return r.json();
 }
 
-export async function downloadRawCsv() {
+export function downloadRawCsv() {
   return `/api/v1/audit/raw-csv`;
 }

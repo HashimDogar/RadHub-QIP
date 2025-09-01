@@ -387,17 +387,31 @@ app.get('/api/v1/rank/:metric', (req, res)=>{
 // Raw CSV
 app.get('/api/v1/audit/raw-csv', (req, res)=>{
   const rows = db.prepare(`
-    SELECT r.id, r.created_at, u.gmc AS requester_gmc, r.radiologist_gmc, r.requester_score_at_request,
-           r.requester_specialty_at_request, r.requester_grade_at_request, r.requester_hospital_at_request, r.requester_name_at_request,
-           r.scan_type, r.outcome, r.points_change, r.reason, r.discussed_with_senior
+    SELECT
+      strftime('%Y-%m-%d', r.created_at) AS date,
+      strftime('%H:%M:%S', r.created_at) AS time,
+      u.gmc AS requester_gmc,
+      r.radiologist_gmc,
+      r.scan_type,
+      COALESCE(r.request_quality_norm, r.request_quality) AS clinical_information_score,
+      COALESCE(r.request_appropriateness_norm, r.request_appropriateness) AS indication_appropriateness_score,
+      r.outcome,
+      r.reason AS feedback,
+      r.requester_score_at_request,
+      r.requester_specialty_at_request,
+      r.requester_grade_at_request,
+      r.requester_hospital_at_request,
+      r.requester_name_at_request,
+      r.points_change,
+      r.discussed_with_senior
     FROM requests r
     JOIN users u ON u.id = r.user_id
     ORDER BY r.created_at DESC
   `).all()
-  let csv = "id,created_at,requester_gmc,radiologist_gmc,requester_score_at_request,requester_specialty_at_request,requester_grade_at_request,requester_hospital_at_request,requester_name_at_request,scan_type,outcome,points_change,reason,discussed_with_senior\n"
+  let csv = "date,time,requester_gmc,radiologist_gmc,scan_type,clinical_information_score,indication_appropriateness_score,outcome,feedback,requester_score_at_request,requester_specialty_at_request,requester_grade_at_request,requester_hospital_at_request,requester_name_at_request,points_change,discussed_with_senior\n"
   for(const r of rows){
-    const safeReason = (r.reason||'').replaceAll('"','""')
-    csv += `${r.id},${r.created_at},${r.requester_gmc},${r.radiologist_gmc},${r.requester_score_at_request},${r.requester_specialty_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.requester_name_at_request||''},${r.scan_type},${r.outcome},${r.points_change},"${safeReason}",${r.discussed_with_senior}\n`
+    const safeFeedback = (r.feedback||'').replaceAll('"','""')
+    csv += `${r.date},${r.time},${r.requester_gmc||''},${r.radiologist_gmc||''},${r.scan_type||''},${r.clinical_information_score||''},${r.indication_appropriateness_score||''},${r.outcome||''},"${safeFeedback}",${r.requester_score_at_request||''},${r.requester_specialty_at_request||''},${r.requester_grade_at_request||''},${r.requester_hospital_at_request||''},${r.requester_name_at_request||''},${r.points_change||''},${r.discussed_with_senior}\n`
   }
   res.header('Content-Type','text/csv')
   res.attachment('audit_raw.csv')

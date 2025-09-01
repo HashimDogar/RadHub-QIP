@@ -122,7 +122,7 @@ export default function Audit(){
     <section className="card">
       <h2>Audit exports</h2>
       <p className="muted">Download all raw request data as a single CSV (includes role snapshots at request time).</p>
-      <a className="chip" href={url} target="_blank" rel="noreferrer">Download raw CSV</a>
+      <a className="chip" href={url} download>Download raw CSV</a>
 
       <div style={{ marginTop:'2rem' }}>
         <h3>Registered Users</h3>
