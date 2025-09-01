@@ -170,7 +170,39 @@ export default function Dashboard(){
       {/* About moves to bottom once recognised */}
       <section className="card">
         <h3>About</h3>
-        <p style={{ margin:0 }}>This tool supports safe out-of-hours CT vetting, provides personalised feedback, and offers eLearning based on iRefer guidance.</p>
+        <p style={{ margin:0 }}>This tool supports safe out-of-hours CT vetting, provides personalised feedback, and offers eLearning to improve our OOH requests.</p>
+        <p></p>
+        <p></p>
+        <p style={{ margin:0 }}>For each request, you will be provided with personalised feedback by the radiologist which can be seen on your dashboard by typing in your GMC number. For every request, you will also generate three scores:</p>
+        <p></p>
+        <ul>
+          <li><p style={{ margin:0 }}>
+            <b>Clinical Information score:</b> A score of 1-10 where the radiologist will rate the quality of clinical information you provided for the requested scan.
+            </p></li>
+          <li><p style={{ margin:0 }}>
+            <b>Clinical Indication score:</b> A score 1-10 where the radiologist will rate the appropriateness of the scan for your clinical situation.
+            </p></li>
+          <li><p style={{ margin: 0 }}>
+            <b>Requestor score:</b> Your starting score is 500. 
+            Accepted = <span style={{ fontWeight: "bold", color: "green" }}>+1</span>, 
+            Rejected = <span style={{ fontWeight: "bold", color: "red" }}>-10</span>, 
+            Delayed = <span style={{ fontWeight: "bold", color: "orange" }}>-5</span>.
+          </p></li>
+        </ul>
+        <p></p>
+
+  <p style={{ margin: 0 }}>
+    These three scores will be combined to calculate an <b>Overall rating</b>. You can then see how you compare to your peers on the <b>Leaderboard</b> section.
+  </p>
+  <p></p>
+  <p style = {{ margin: 0}}>
+    The score given by each radiologist will be normalised via 'Within rater Normalisation'. This increased inter-rater comparibility of scores, and prevents your score being adversely affected by radiologist who tend to score more harshly.
+  </p>
+  <p></p>
+  <h3>eLearning</h3>
+  <p style = {{ margin: 0}}>
+    By completing eLearning, you can increase your requestor score, which will in turn increase your overall score and ranking on the leaderboards.
+  </p>
       </section>
 
       {!recognised && isGmcValid && (

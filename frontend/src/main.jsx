@@ -9,7 +9,7 @@ import Audit from './pages/Audit.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 
 function Header(){
-  return (<header><div className="container"><h1>Radiology hub QIP</h1><p className="muted">OOH CT vetting • dashboards • eLearning</p></div></header>)
+  return (<header><div className="container"><h1>Radiology hub QIP</h1><p className="muted">OOH CT Vetting • Feedback • eLearning</p></div></header>)
 }
 function Tabs({ tab, setTab }){
   const items = [
@@ -43,7 +43,7 @@ function App(){
       <CookieBanner />
       <footer>
         <div className="container footer-row">
-          <small>© Radiology hub QIP</small>
+          <small>Built by Hashim Dogar</small>
           <DarkModeToggle />
         </div>
       </footer>
