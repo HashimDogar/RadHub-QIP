@@ -75,14 +75,14 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
             <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span>Clinical Information rating</span>
-                <InfoButton text="Average score (0-10) for the quality of clinical information provided on requests." />
+                <InfoButton text="Average score (1-10). This reflects the quality of information you give when requesting a scan." />
               </div>
               <strong style={{fontSize: 20}}>{qualityAvg}</strong>
             </div>
             <div style ={{margin: 10, display:"flex", flexDirection:"column", padding:5}}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span>Request Indication rating</span>
-                <InfoButton text="Average score (0-10) reflecting how appropriate the request indication is." />
+                <span>Clinical Indication rating</span>
+                <InfoButton text="Average score (1-10). This reflects the appropriateness of the indication for your request." />
               </div>
               <strong style={{fontSize: 20}}>{appropriatenessAvg}</strong>
             </div>
