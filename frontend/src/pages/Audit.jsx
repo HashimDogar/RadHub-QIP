@@ -133,6 +133,7 @@ export default function Audit(){
             data: quality,
             borderColor: '#4bc0c0',
             backgroundColor: '#4bc0c0',
+            spanGaps: true,
             yAxisID: 'y'
           },
           {
@@ -141,6 +142,7 @@ export default function Audit(){
             data: appropriateness,
             borderColor: '#9966ff',
             backgroundColor: '#9966ff',
+            spanGaps: true,
             yAxisID: 'y'
           },
           {

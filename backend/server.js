@@ -485,8 +485,8 @@ app.get('/api/v1/audit/trends', (req, res) => {
       LEFT JOIN (
         SELECT strftime('${fmt}', created_at) AS period,
                COUNT(*) AS requests,
-               AVG(${qCol}) AS avg_quality,
-               AVG(${aCol}) AS avg_appropriateness
+               CASE WHEN COUNT(${qCol}) = 0 THEN 0 ELSE AVG(${qCol}) END AS avg_quality,
+               CASE WHEN COUNT(${aCol}) = 0 THEN 0 ELSE AVG(${aCol}) END AS avg_appropriateness
         FROM requests
         GROUP BY period
       ) r ON r.period = p.period
