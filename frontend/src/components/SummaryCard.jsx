@@ -58,7 +58,7 @@ export default function SummaryCard({ stats, score, requests = [], showOverrides
             <div style ={{margin: 10, display:"flex", flexDirection:"column", border: "2px", borderRadius: "10px", padding:5, backgroundColor: "#DEBB00"}}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span>Overall Rating</span>
-                <InfoButton text="Combination of your Clinical indication score, Clinical information score, and Requestor score" />
+                <InfoButton text="Combination of your Clinical indication score, Clinical information score, and Request points" />
               </div>
               <strong style={{fontSize: 20}}>{requestorScoreDisplay}</strong>
               {rankings?.hospital && (
