@@ -48,7 +48,7 @@ export default function Dashboard(){
       } else {
         setData(null)
         setRecognised(false)
-        setMsg(res?.error || 'User not recognised')
+        setMsg(res?.error || 'User not recognised - create a new profile below')
         setRankings({})
       }
     } finally { setBusy(false) }
@@ -96,7 +96,7 @@ export default function Dashboard(){
 
   const profileCard = recognised ? (
     <section className="card">
-      <h3>Profile</h3>
+      <h2>Profile</h2>
       {!editing ? (
         <>
           <div className="kpis">
@@ -167,6 +167,40 @@ export default function Dashboard(){
       {summaryCard}
       <Modules visible={!!recognised} />
 
+      {!recognised && isGmcValid && (
+        <section className="card">
+          <h2>Create new profile</h2>
+          <div className="kpis" style={{ marginBottom:8 }}>
+            <div className="kpi"><div>GMC</div><strong>{gmc}</strong></div>
+            <div className="kpi"><div>Name (from GMC)</div><strong>{signupName || '-'}</strong></div>
+          </div>
+          <div className="row">
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Name</label><input value={signupName} onChange={e=>setSignupName(e.target.value)} placeholder="Auto from GMC (editable)" /></div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Specialty</label>
+              <select value={signupSpec} onChange={e=>setSignupSpec(e.target.value)}>
+                <option value="">Select specialty</option>
+                {['Emergency Medicine','General (Internal) Medicine','General Surgery','Orthopaedic Surgery','Plastic Surgery','Neurosurgery','Urology','ENT (Otolaryngology)','Maxillofacial Surgery','Paediatrics','Obstetrics & Gynaecology','Intensive Care','Anaesthetics','Cardiology','Neurology','Oncology','Geriatrics','Other'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Grade</label>
+              <select value={signupGrade} onChange={e=>setSignupGrade(e.target.value)}>
+                <option value="">Select grade</option>
+                {['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Hospital</label>
+              <select value={signupHosp} onChange={e=>setSignupHosp(e.target.value)}>
+                <option value="">Select hospital</option>
+                {['Whiston Hospital','Southport Hospital','Ormskirk Hospital'].map(h=><option key={h}>{h}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="actions" style={{ marginTop:8 }}>
+            <button className="primary" disabled={busy} onClick={createProfile}>{busy?'Saving…':'Create profile'}</button>
+          </div>
+        </section>
+      )}
+
       {/* About moves to bottom once recognised */}
       <section className="card">
         <h3>About</h3>
@@ -205,39 +239,7 @@ export default function Dashboard(){
   </p>
       </section>
 
-      {!recognised && isGmcValid && (
-        <section className="card">
-          <h2>User not recognised</h2>
-          <div className="kpis" style={{ marginBottom:8 }}>
-            <div className="kpi"><div>GMC</div><strong>{gmc}</strong></div>
-            <div className="kpi"><div>Name (from GMC)</div><strong>{signupName || '-'}</strong></div>
-          </div>
-          <div className="row">
-            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Name</label><input value={signupName} onChange={e=>setSignupName(e.target.value)} placeholder="Auto from GMC (editable)" /></div>
-            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Specialty</label>
-              <select value={signupSpec} onChange={e=>setSignupSpec(e.target.value)}>
-                <option value="">Select specialty</option>
-                {['Emergency Medicine','General (Internal) Medicine','General Surgery','Orthopaedic Surgery','Plastic Surgery','Neurosurgery','Urology','ENT (Otolaryngology)','Maxillofacial Surgery','Paediatrics','Obstetrics & Gynaecology','Intensive Care','Anaesthetics','Cardiology','Neurology','Oncology','Geriatrics','Other'].map(s=><option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Grade</label>
-              <select value={signupGrade} onChange={e=>setSignupGrade(e.target.value)}>
-                <option value="">Select grade</option>
-                {['FY1','FY2','CT1','CT2','CT3','IMT1','IMT2','IMT3','SHO','Registrar','ST4+','Consultant','Other'].map(s=><option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div style={{ minWidth: 220, flex:'1 1 220px' }}><label>Hospital</label>
-              <select value={signupHosp} onChange={e=>setSignupHosp(e.target.value)}>
-                <option value="">Select hospital</option>
-                {['Whiston Hospital','Southport Hospital','Ormskirk Hospital'].map(h=><option key={h}>{h}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="actions" style={{ marginTop:8 }}>
-            <button className="primary" disabled={busy} onClick={createProfile}>{busy?'Saving…':'Create profile'}</button>
-          </div>
-        </section>
-      )}
+      
     </div>
   )
 }
