@@ -87,18 +87,19 @@ export default function RecentRequestHistory({ requests = [] }) {
             </tr>
           </thead>
           <tbody>
-            {last.map((r) => (
-              <tr key={r.id} className={outcomeClass(r.outcome)}>
-                <td>{formatDate(r.created_at)}</td>
-                <td>{r.scan_type || '—'}</td>
-                <td>{formatOutcome(r.outcome)}</td>
-                <td title={r.reason?.trim() ? r.reason : undefined}>
-                  {r.reason?.trim() ? r.reason : '—'}
-                </td>
-                <td style={{ textAlign:'center' }}>{formatSigFig(r.request_appropriateness)}</td>
-                <td style={{ textAlign:'center' }}>{formatSigFig(r.request_quality)}</td>
-              </tr>
-            ))}
+            {last.map((r) => {
+              const feedback = r.reason?.trim()
+              return (
+                <tr key={r.id} className={outcomeClass(r.outcome)}>
+                  <td>{formatDate(r.created_at)}</td>
+                  <td>{r.scan_type || '—'}</td>
+                  <td>{formatOutcome(r.outcome)}</td>
+                  <td title={feedback}>{feedback || '—'}</td>
+                  <td style={{ textAlign:'center' }}>{formatSigFig(r.request_appropriateness)}</td>
+                  <td style={{ textAlign:'center' }}>{formatSigFig(r.request_quality)}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}

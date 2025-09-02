@@ -199,6 +199,7 @@ export default function Radiologist(){
       <section className="card">
         <h3>{radName || '-'}</h3>
         <div style={{color: "#4b5563"}}>Radiologist</div>
+        <div style={{color: "#4b5563"}}>GMC: {radGmc}</div>
         <div className="row" style={{ marginTop: 8 }}>
           <button onClick={toggleHistory}>{showHistory ? 'Hide vetting history' : 'Show Vetting history'}</button>
           <button onClick={changeUser}>Change User</button>
@@ -219,19 +220,22 @@ export default function Radiologist(){
               </tr>
             </thead>
             <tbody>
-              {history.map((h,i)=>(
-                <tr key={i} className={outcomeClass(h.outcome)}>
-                  <td>{formatDate(h.created_at)}</td>
-                  <td style={{ textAlign:'center' }}>{formatTime(h.created_at)}</td>
-                  <td style={{ textAlign:'center' }}>{h.requester_gmc}</td>
-                  <td>{h.requester_name || '-'}</td>
-                  <td>{h.scan_type}</td>
-                  <td style={{ textAlign:'center' }}>{formatOutcome(h.outcome)}</td>
-                  <td style={{ textAlign:'center' }}>{h.clinical_information_score ?? '-'}</td>
-                  <td style={{ textAlign:'center' }}>{h.indication_score ?? '-'}</td>
-                  <td style={{ textAlign:'center' }}>{h.reason || '-'}</td>
-                </tr>
-              ))}
+              {history.map((h,i) => {
+                const feedback = h.reason?.trim()
+                return (
+                  <tr key={i} className={outcomeClass(h.outcome)}>
+                    <td>{formatDate(h.created_at)}</td>
+                    <td style={{ textAlign:'center' }}>{formatTime(h.created_at)}</td>
+                    <td style={{ textAlign:'center' }}>{h.requester_gmc}</td>
+                    <td>{h.requester_name || '-'}</td>
+                    <td>{h.scan_type}</td>
+                    <td style={{ textAlign:'center' }}>{formatOutcome(h.outcome)}</td>
+                    <td style={{ textAlign:'center' }}>{h.clinical_information_score ?? '-'}</td>
+                    <td style={{ textAlign:'center' }}>{h.indication_score ?? '-'}</td>
+                    <td style={{ textAlign:'center' }} title={feedback}>{feedback || '-'}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
