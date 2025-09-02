@@ -246,6 +246,9 @@ export default function Audit(){
             </select>
           </div>
         </div>
+        <p className="muted" style={{ marginTop:'0.5rem' }}>
+          {users.length} total registered users
+        </p>
         <div style={{ overflowX:'auto' }}>
           <table className="table">
             <thead>
@@ -312,6 +315,9 @@ export default function Audit(){
             </select>
           </div>
         </div>
+        <p className="muted" style={{ marginTop:'0.5rem' }}>
+          {rads.length} total registered radiologists
+        </p>
         <div style={{ overflowX:'auto' }}>
           <table className="table">
             <thead>
