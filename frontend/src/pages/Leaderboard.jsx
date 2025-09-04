@@ -88,7 +88,7 @@ export default function Leaderboard(){
       <LeaderboardTable metric="score" title="Overall rating" />
       <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
         <LeaderboardTable metric="quality" title="Clinical Information rating" />
-        <LeaderboardTable metric="appropriateness" title="Request indication rating" />
+        <LeaderboardTable metric="appropriateness" title="Clinical indication rating" />
       </div>
 
       <section className="card" style={{ marginTop:'2rem' }}>
@@ -109,7 +109,7 @@ export default function Leaderboard(){
           <LeaderboardTable metric="score" title="Overall rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
             <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
-            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
+            <LeaderboardTable metric="appropriateness" title="Clinical indication rating" hospital={localUser.hospital} specialty={localUser.specialty} highlightGmc={localUser.gmc} />
           </div>
         </>
       )}
@@ -142,7 +142,7 @@ export default function Leaderboard(){
           <LeaderboardTable metric="score" title="Overall rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
           <div className="grid" style={{ gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))' }}>
             <LeaderboardTable metric="quality" title="Clinical Information rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
-            <LeaderboardTable metric="appropriateness" title="Request indication rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
+            <LeaderboardTable metric="appropriateness" title="Clinical indication rating" hospital={findHospital || undefined} specialty={findSpecialty || undefined} />
           </div>
         </>
       )}
